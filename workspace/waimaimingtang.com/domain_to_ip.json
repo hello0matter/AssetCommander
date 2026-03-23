@@ -1,0 +1,121 @@
+{
+    "privacy.waimaimingtang.com": [
+        "203.107.62.43"
+    ],
+    "bwyc.waimaimingtang.com": [
+        "203.107.62.43"
+    ],
+    "wmmt-sj-test-1.waimaimingtang.com": [
+        "120.77.175.93"
+    ],
+    "fz-gateway.waimaimingtang.com": [
+        "203.107.62.43"
+    ],
+    "test-wmmt-dls.waimaimingtang.com": [
+        "120.77.175.93"
+    ],
+    "test-agent-admin.waimaimingtang.com": [
+        "47.112.118.78",
+        "47.106.8.220"
+    ],
+    "wmh5.waimaimingtang.com": [
+        "203.107.62.43"
+    ],
+    "waimaimingtang.com": [
+        "112.74.178.114"
+    ],
+    "www.waimaimingtang.com": [
+        "112.74.178.114"
+    ],
+    "*.waimaimingtang.com": [],
+    "ly-test.waimaimingtang.com": [
+        "120.77.175.93"
+    ],
+    "merchant-web.waimaimingtang.com": [
+        "101.227.110.33"
+    ],
+    "wmmt-sj-uat.waimaimingtang.com": [
+        "120.77.175.93"
+    ],
+    "hcm.waimaimingtang.com": [
+        "101.227.110.33"
+    ],
+    "test-kibana.waimaimingtang.com": [
+        "101.227.109.177"
+    ],
+    "wmmt-h5.waimaimingtang.com": [
+        "203.107.62.43"
+    ],
+    "wmmt-sj.waimaimingtang.com": [],
+    "test-wmmt-h5.waimaimingtang.com": [
+        "120.77.175.93"
+    ],
+    "test-wmmt.waimaimingtang.com": [
+        "101.227.111.122",
+        "175.102.11.115"
+    ],
+    "img.waimaimingtang.com": [
+        "157.255.232.89"
+    ],
+    "rt6esb.baidu.com": [
+        "180.76.244.246"
+    ],
+    "rt6esbtest.baidu.com": [
+        "120.48.63.124"
+    ],
+    "top.baidu.com": [
+        "163.177.17.154"
+    ],
+    "www.baidu.com": [
+        "157.148.69.151",
+        "157.148.69.186"
+    ],
+    "c.tieba.baidu.com": [
+        "61.135.162.207"
+    ],
+    "lcs.baidu.com": [
+        "163.177.18.22",
+        "157.148.69.55"
+    ],
+    "ivcpotauae.baidu.com": [
+        "158.252.29.233",
+        "158.252.190.208"
+    ],
+    "sfm-test.baidu.com": [],
+    "ivcpyiyan.baidu.com": [
+        "180.76.149.78"
+    ],
+    "otacdn.baidu.com": [
+        "157.148.65.38"
+    ],
+    "*.bce.baidu.com": [],
+    "*.lcs.baidu.com": [],
+    "localhost.pan.baidu.com": [
+        "127.0.0.1"
+    ],
+    "duke.baidu.com": [],
+    "*.vpn.baidu.com": [],
+    "httpsdns.baidu.com": [
+        "103.211.221.200",
+        "110.242.68.141",
+        "111.206.210.58"
+    ],
+    "vpn.baidu.com": [
+        "157.148.69.173",
+        "157.148.69.190"
+    ],
+    "*.becbos.baidu.com": [],
+    "becbos.baidu.com": [],
+    "mno.baidu.com": [
+        "180.76.174.130"
+    ],
+    "ivcptest.baidu.com": [
+        "120.48.90.5"
+    ],
+    "portal-flv.bce.baidu.com": [
+        "122.205.111.35"
+    ],
+    "portal-hls.bce.baidu.com": [
+        "118.212.229.38"
+    ]
+}

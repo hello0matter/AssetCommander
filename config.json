@@ -1,0 +1,4 @@
+{
+    "fscan_cmd": "fscan.exe -h {target} -p 80,443,8080,8443,8081 -m web -np -t 100",
+    "oneforall_cmd": "uv run D:/tmp/anjian/pj/st/OneForAll/oneforall.py --target {target} run"
+}
