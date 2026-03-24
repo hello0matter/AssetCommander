@@ -5,20 +5,26 @@
     "*.becbos.baidu.com": [],
     "www.baidu.com": [
         "157.148.69.151",
-        "157.148.69.186"
+        "157.148.69.186",
+        "183.2.172.17",
+        "183.2.172.177"
     ],
     "top.baidu.com": [
-        "163.177.17.154"
+        "163.177.17.154",
+        "14.215.182.212"
     ],
     "c.tieba.baidu.com": [
-        "61.135.162.207"
+        "61.135.162.207",
+        "183.2.172.1"
     ],
     "ivcpyiyan.baidu.com": [
         "180.76.149.78"
     ],
     "lcs.baidu.com": [
         "163.177.18.22",
-        "157.148.69.55"
+        "157.148.69.55",
+        "14.215.183.91",
+        "14.215.183.88"
     ],
     "localhost.pan.baidu.com": [
         "127.0.0.1"
@@ -26,10 +32,15 @@
     "httpsdns.baidu.com": [
         "111.206.210.58",
         "110.242.68.141",
-        "103.211.221.200"
+        "103.211.221.200",
+        "180.101.51.216",
+        "180.101.50.135",
+        "124.237.177.73",
+        "220.181.33.107"
     ],
     "otacdn.baidu.com": [
-        "157.148.65.38"
+        "157.148.65.38",
+        "27.148.188.38"
     ],
     "ivcpotauae.baidu.com": [
         "158.252.190.208",
@@ -46,17 +57,21 @@
     ],
     "vpn.baidu.com": [
         "157.148.69.190",
-        "157.148.69.173"
+        "157.148.69.173",
+        "14.215.184.138",
+        "14.215.184.130"
     ],
     "becbos.baidu.com": [],
     "mno.baidu.com": [
         "180.76.174.130"
     ],
     "portal-flv.bce.baidu.com": [
-        "122.205.111.35"
+        "122.205.111.35",
+        "183.60.227.35"
     ],
     "portal-hls.bce.baidu.com": [
-        "118.212.229.38"
+        "118.212.229.38",
+        "120.41.32.38"
     ],
     "sfm-test.baidu.com": [],
     "39.229.212.118.adsl-pool.jx.chinaunicom.com": [],
@@ -66,5 +81,539 @@
         "158.252.29.146"
     ],
     "26.229.212.118.adsl-pool.jx.chinaunicom.com": [],
-    "49.229.212.118.adsl-pool.jx.chinaunicom.com": []
+    "49.229.212.118.adsl-pool.jx.chinaunicom.com": [],
+    "opencdnbaiduvdse.jomodns.com": [
+        "118.212.229.35"
+    ],
+    "z.autoimg.cn": [
+        "118.212.229.35"
+    ],
+    "opencdnmsdl1.jomodns.com": [
+        "118.212.229.35"
+    ],
+    "opencdnbaiduvdse.d.jomodns.com": [
+        "118.212.229.35"
+    ],
+    "chejiahao.autohome.com.cn": [
+        "118.212.229.35"
+    ],
+    "opencdnqczjv6.jomodns.com": [
+        "118.212.229.35"
+    ],
+    "opencdnchj.jomodns.com": [
+        "118.212.229.35"
+    ],
+    "opencdnbaidu35v6.jomodns.com": [
+        "118.212.229.35"
+    ],
+    "dx.autoimg.cn": [
+        "118.212.229.35"
+    ],
+    "opencdnqczj.jomodns.com": [
+        "118.212.229.35"
+    ],
+    "111156.xyz": [
+        "118.212.229.35"
+    ],
+    "mx13.baidu.com": [
+        "61.135.162.62"
+    ],
+    "www.whmaoyin.com": [
+        "180.76.149.248"
+    ],
+    "whmaoyin.com": [
+        "180.76.149.248"
+    ],
+    "www.tomika.cn": [
+        "180.76.149.248"
+    ],
+    "idata.baidu.com": [
+        "111.206.210.28"
+    ],
+    "mapsnap.jomodns.com": [
+        "157.148.65.49"
+    ],
+    "ecomcbjs.jomodns.com": [
+        "157.148.65.49"
+    ],
+    "yuda120.com": [
+        "180.76.244.211"
+    ],
+    "hongleitc.com": [
+        "180.76.244.211"
+    ],
+    "f.hbruima.cn": [
+        "180.76.244.211"
+    ],
+    "xiaoxiong.szbayy.com": [
+        "127.0.0.1"
+    ],
+    "prog123.cn": [
+        "180.76.244.136"
+    ],
+    "dbgysj.com": [
+        "180.76.174.6"
+    ],
+    "db2.tobybai.cn": [
+        "180.76.149.212"
+    ],
+    "qiocn.com": [
+        "180.76.149.212"
+    ],
+    "turbonetlogback.n.shifen.com": [
+        "163.177.17.3"
+    ],
+    "waimai.n.shifen.com": [
+        "61.135.162.14"
+    ],
+    "yongbangcatalogue.com": [
+        "180.76.174.212"
+    ],
+    "www.yongbangcatalogue.com": [
+        "180.76.174.212"
+    ],
+    "www.jdfirewall.com": [
+        "180.76.149.194"
+    ],
+    "sekeai.com": [
+        "180.76.174.141"
+    ],
+    "www.stsun.xyz": [
+        "180.76.174.141"
+    ],
+    "www.stsun.top": [
+        "180.76.174.141"
+    ],
+    "apollocloud.baidu.com": [
+        "111.206.210.23"
+    ],
+    "xcloud.baidu.com": [
+        "111.206.210.23"
+    ],
+    "apollo-home.n.shifen.com": [
+        "111.206.210.23"
+    ],
+    "kingyaomall.com": [
+        "120.48.63.244"
+    ],
+    "www.yichongzhaoshang.net": [
+        "183.60.227.35"
+    ],
+    "www.yunze2020.cn": [
+        "183.60.227.35"
+    ],
+    "www.fanminglt.com": [
+        "183.60.227.35"
+    ],
+    "www.naitokikai.com": [
+        "183.60.227.35"
+    ],
+    "www.see-far.com": [
+        "183.60.227.35"
+    ],
+    "www.haiyuqiti.com": [
+        "183.60.227.35"
+    ],
+    "ljycdn.djduoduo.com": [
+        "183.60.227.35"
+    ],
+    "opencdnspyv6.jomodns.com": [
+        "183.60.227.35"
+    ],
+    "www.bbctop.com": [
+        "183.60.227.35"
+    ],
+    "fall.cmzgwl.cn": [
+        "183.60.227.35"
+    ],
+    "emyfs.bs2cdn.yy.com": [
+        "183.60.227.35"
+    ],
+    "www.kyxd88.com.cn": [
+        "183.60.227.35"
+    ],
+    "www.jd-17.com": [
+        "183.60.227.35"
+    ],
+    "opencdnglobalv6.f24i25ec.hzyidc.com": [
+        "183.60.227.35"
+    ],
+    "miniapp-ad.cdn.bcebos.com": [
+        "183.60.227.35"
+    ],
+    "www.fhsci.com": [
+        "183.60.227.35"
+    ],
+    "www.misensor.cn": [
+        "183.60.227.35"
+    ],
+    "www.sh2jzx.com": [
+        "183.60.227.35"
+    ],
+    "220523.bidcenter.com.cn": [
+        "183.60.227.35"
+    ],
+    "fx.runmin.net": [
+        "183.60.227.35"
+    ],
+    "c1.5yyz.com": [
+        "183.60.227.35"
+    ],
+    "ruanmei.com": [
+        "183.60.227.35"
+    ],
+    "sourcery.gallerycdn.azure.cn": [
+        "183.60.227.35"
+    ],
+    "www.gdzqhx.com": [
+        "183.60.227.35"
+    ],
+    "www.sz-victor17.cn": [
+        "183.60.227.35"
+    ],
+    "opencdnbaidutbpic.jomodns.com": [
+        "183.60.227.35"
+    ],
+    "m.babybus.com": [
+        "183.60.227.35"
+    ],
+    "devops.ttms2.bayer.cn": [
+        "183.60.227.35"
+    ],
+    "www.beierpm.com": [
+        "183.60.227.35"
+    ],
+    "zuihuimai.com": [
+        "183.60.227.35"
+    ],
+    "lkapi.cn": [
+        "183.60.227.35"
+    ],
+    "avatar.gouli99.cn": [
+        "183.60.227.35"
+    ],
+    "opencdnspy.jomodns.com": [
+        "183.60.227.35"
+    ],
+    "data.7m.com.cn": [
+        "183.60.227.35"
+    ],
+    "xinpub.cdn.bcebos.com": [
+        "183.60.227.35"
+    ],
+    "cdnx.sunyi.io": [
+        "183.60.227.35"
+    ],
+    "opencdn00.jomodns.com": [
+        "183.60.227.35"
+    ],
+    "v2js25625.covisint.io": [
+        "183.60.227.35"
+    ],
+    "www.cmeii.com": [
+        "183.60.227.35"
+    ],
+    "ccq.178.com.a.bdydns.com": [
+        "183.60.227.35"
+    ],
+    "www.rongshida-test.com": [
+        "183.60.227.35"
+    ],
+    "www.mucaifensui.cn": [
+        "183.60.227.35"
+    ],
+    "tswtrlw.com": [
+        "183.60.227.35"
+    ],
+    "320685.bidcenter.com.cn": [
+        "183.60.227.35"
+    ],
+    "189plus.cn": [
+        "183.60.227.35"
+    ],
+    "cq.bidcenter.com.cn": [
+        "183.60.227.35"
+    ],
+    "map-mobile-resource.cdn.bcebos.com": [
+        "183.60.227.35"
+    ],
+    "www.youdujd.com": [
+        "183.60.227.35"
+    ],
+    "www.pxcsc.com": [
+        "183.60.227.35"
+    ],
+    "ggkkmuup9wuugp6ep8d.exp.bcevod.com.a.bdydns.com": [
+        "183.60.227.35"
+    ],
+    "deloittedigital.com.cn": [
+        "183.60.227.35"
+    ],
+    "opencdnsslv6.cdn.vsjwtcdn.com": [
+        "183.60.227.35"
+    ],
+    "www.haoluntech.com": [
+        "183.60.227.35"
+    ],
+    "p.juyingdangan.cn": [
+        "183.60.227.35"
+    ],
+    "opencdnka.jomodns.com": [
+        "183.60.227.35"
+    ],
+    "fir.yidianzixun.com": [
+        "183.60.227.35"
+    ],
+    "www.machineinfo.com.cn": [
+        "183.60.227.35"
+    ],
+    "www.flyfinger.com": [
+        "183.60.227.35"
+    ],
+    "vgcportaluat.volkswagengroupchina.com.cn": [
+        "183.60.227.35"
+    ],
+    "www.allerganaesthetics.cn": [
+        "183.60.227.35"
+    ],
+    "cdn2.mhtall.com": [
+        "183.60.227.35"
+    ],
+    "cdn.dg.114my.cn": [
+        "183.60.227.35"
+    ],
+    "opencdnsslv6.cdn1.hzywinf.com": [
+        "183.60.227.35"
+    ],
+    "www.jiangdong17.com": [
+        "183.60.227.35"
+    ],
+    "opencdnssl.jomodns.com": [
+        "183.60.227.35"
+    ],
+    "qujiao.zhihuiliu.com": [
+        "183.60.227.35"
+    ],
+    "czt.cc": [
+        "183.60.227.35"
+    ],
+    "icdn.binmt.cc": [
+        "183.60.227.35"
+    ],
+    "www.yaqiujiqi.cn": [
+        "183.60.227.35"
+    ],
+    "config.ziliao8.cc": [
+        "183.60.227.35"
+    ],
+    "410526.bidcenter.com.cn": [
+        "183.60.227.35"
+    ],
+    "qiming.weiqiming.com": [
+        "183.60.227.35"
+    ],
+    "www.wlaqiti.com": [
+        "183.60.227.35"
+    ],
+    "sz-lsly.com": [
+        "183.60.227.35"
+    ],
+    "fir.xinhucaifu.com": [
+        "183.60.227.35"
+    ],
+    "ms-azuretools.gallerycdn.azure.cn": [
+        "183.60.227.35"
+    ],
+    "www.powerjoint.cn": [
+        "183.60.227.35"
+    ],
+    "www.softmaze.com": [
+        "183.60.227.35"
+    ],
+    "img4.nga.178.com.a.bdydns.com": [
+        "183.60.227.35"
+    ],
+    "dz-z.com": [
+        "183.60.227.35"
+    ],
+    "ulpblob-uat.michelin.com.cn": [
+        "183.60.227.35"
+    ],
+    "cdn.caiyicloud.com": [
+        "183.60.227.35"
+    ],
+    "www.q641f.com": [
+        "183.60.227.35"
+    ],
+    "wx20.01yg.cn.a.bdydns.com": [
+        "183.60.227.35"
+    ],
+    "www.jieganfensuiji.com": [
+        "183.60.227.35"
+    ],
+    "110ym.com": [
+        "183.60.227.35"
+    ],
+    "dnicolson.gallerycdn.azure.cn": [
+        "183.60.227.35"
+    ],
+    "8883888.vip": [
+        "183.60.227.35"
+    ],
+    "www.sz17w.com": [
+        "183.60.227.35"
+    ],
+    "www.wuxibuxiu.com": [
+        "183.60.227.35"
+    ],
+    "js.18183.com.a.bdydns.com": [
+        "183.60.227.35"
+    ],
+    "www.shyndzkj.com": [
+        "183.60.227.35"
+    ],
+    "www.dsmro.com": [
+        "183.60.227.35"
+    ],
+    "www.blueghost.com.cn": [
+        "183.60.227.35"
+    ],
+    "www.szwjlt.cn": [
+        "183.60.227.35"
+    ],
+    "www.ldyjz.com": [
+        "183.60.227.35"
+    ],
+    "opencdnqiniubzhanv6.jomodns.com": [
+        "183.60.227.35"
+    ],
+    "omccdn.bmw.com.cn": [
+        "183.60.227.35"
+    ],
+    "www.zuihuimai.com": [
+        "183.60.227.35"
+    ],
+    "www.kingrang.com": [
+        "183.60.227.35"
+    ],
+    "cdn.jisupeixun.com": [
+        "183.60.227.35"
+    ],
+    "opencdnjhvod.jomodns.com": [
+        "183.60.227.35"
+    ],
+    "www.peiouyiqi.com": [
+        "183.60.227.35"
+    ],
+    "zn.h-fang.com": [
+        "183.60.227.35"
+    ],
+    "machineinfo.com.cn": [
+        "183.60.227.35"
+    ],
+    "opencdnspy.zs.cloud21cn.com": [
+        "183.60.227.35"
+    ],
+    "opencdnsslv6.syscdn.zjzydns.com": [
+        "183.60.227.35"
+    ],
+    "www.tuofeng.net.cn": [
+        "183.60.227.35"
+    ],
+    "www.sangerbio.com": [
+        "183.60.227.35"
+    ],
+    "lapin365.com": [
+        "183.60.227.35"
+    ],
+    "cdn.lyz810.com": [
+        "183.60.227.35"
+    ],
+    "img.29o.cn": [
+        "183.60.227.35"
+    ],
+    "cdn.otr.mercedes-benz.com.cn": [
+        "183.60.227.35"
+    ],
+    "njprjgxx.com": [
+        "183.60.227.35"
+    ],
+    "www.shwjzdh.com": [
+        "183.60.227.35"
+    ],
+    "opencdnsslv6.jomodns.com": [
+        "183.60.227.35"
+    ],
+    "www.hbrzwy.com": [
+        "183.60.227.35"
+    ],
+    "www.pipefittings.vip": [
+        "183.60.227.35"
+    ],
+    "daka1.com": [
+        "183.60.227.35"
+    ],
+    "upush.download.meizu.com": [
+        "183.60.227.35"
+    ],
+    "m.zhendongshai.com": [
+        "183.60.227.35"
+    ],
+    "app.nga.cn": [
+        "183.60.227.35"
+    ],
+    "opencdnbaidufeedimg.002.hljzl.icu": [
+        "183.60.227.35"
+    ],
+    "mobile20-mini.bmw.com.cn": [
+        "183.60.227.35"
+    ],
+    "www.shkd18.com": [
+        "183.60.227.35"
+    ],
+    "hpplay.cdn.cibn.cc": [
+        "183.60.227.35"
+    ],
+    "docker.gallerycdn.azure.cn": [
+        "183.60.227.35"
+    ],
+    "bjshanshui.com": [
+        "183.60.227.35"
+    ],
+    "suinixing.michelin.com.cn": [
+        "183.60.227.35"
+    ],
+    "www.kstsz.com": [
+        "183.60.227.35"
+    ],
+    "opencdn126music.jomodns.com": [
+        "183.60.227.35"
+    ],
+    "www.qzjhp.com": [
+        "183.60.227.35"
+    ],
+    "contentcms-bj.cdn.bcebos.com": [
+        "183.60.227.35"
+    ],
+    "zhushouapi.gamedog.cn": [
+        "183.60.227.35"
+    ],
+    "img1.178.com": [
+        "183.60.227.35"
+    ],
+    "www.7e.hk.a.bdydns.com": [
+        "183.60.227.35"
+    ],
+    "a9vg.com.a.bdydns.com": [
+        "183.60.227.35"
+    ],
+    "www.sz-lsly.com": [
+        "183.60.227.35"
+    ],
+    "www.syhtwh.com": [
+        "183.60.227.35"
+    ],
+    "zgprecast.com": [
+        "120.48.63.70"
+    ]
 }

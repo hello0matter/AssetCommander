@@ -1,1 +1,1 @@
-{"target": "waimaimingtang.com", "k": true, "80": true, "443": true, "n": true, "abs": false, "waf": false, "sni": false}
+{"target": "waimaimingtang.com", "k": true, "80": true, "443": true, "n": true, "abs": true, "waf": false, "sni": false}
