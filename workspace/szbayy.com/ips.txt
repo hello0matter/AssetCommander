@@ -3,10 +3,3 @@
 58.60.110.202
 10.17.200.166
 10.17.200.241
-kpi.szbayy.com
-hr.szbayy.com
-zfb.szbayy.com
-jys.szbayy.com
-oa.szbayy.com
-hrp.szbayy.com
-book.szbayy.com

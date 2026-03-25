@@ -697,6 +697,9 @@ class FissionTask(QThread):
         self.ports = [p.strip() for p in ports_str.split(',') if p.strip().isdigit()]
         if not self.ports: 
             self.ports = ['80', '443'] # 兜底端口
+            
+        # 🎯 核心修复：定义并发量！C段测绘量大，直接飙到 300 并发
+        self.concurrency = 300 
         self._stop = False
 
     async def fetch_title(self, session, url, sem):
@@ -725,13 +728,12 @@ class FissionTask(QThread):
         loop = asyncio.new_event_loop(); asyncio.set_event_loop(loop)
         
         async def run_all():
-
-# 🌟 增加 enable_cleanup_closed，强制回收僵尸连接
+            # 🌟 增加 enable_cleanup_closed，强制回收僵尸连接
             connector = aiohttp.TCPConnector(limit=self.concurrency, ssl=False, force_close=True, enable_cleanup_closed=True)
             # 设置整个 Session 的硬超时，防止网络层假死
             timeout = aiohttp.ClientTimeout(total=8, connect=3)
             async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
-                sem = asyncio.Semaphore(200) 
+                sem = asyncio.Semaphore(self.concurrency) 
                 
                 tasks = []
                 for ip in self.ips:
@@ -750,14 +752,18 @@ class FissionTask(QThread):
                 while tasks:
                     if self._stop:
                         for t in tasks: t.cancel()
-                        # 新增这一行：让被取消的任务完成异常抛出和资源释放
+                        # 让被取消的任务完成异常抛出和资源释放
                         await asyncio.gather(*tasks, return_exceptions=True)
                         break
                     done, pending = await asyncio.wait(tasks, timeout=0.5)
                     tasks = list(pending)
 
-        try: loop.run_until_complete(run_all())
-        except Exception: pass
+        try: 
+            loop.run_until_complete(run_all())
+        except Exception as e: 
+            # 🎯 修复：千万别用 pass 吞掉错误了，打印出来方便以后排查
+            import traceback
+            traceback.print_exc()
         finally:
             try: loop.run_until_complete(loop.shutdown_asyncgens()); loop.close()
             except: pass
@@ -808,6 +814,17 @@ class IPFissionDialog(QDialog):
         self.input_ports.textChanged.connect(self.save_state) # 实时保存
         ll.addWidget(self.input_ports)
         
+# 🎯 新增：独立的并发控制框
+        hl_threads = QHBoxLayout()
+        hl_threads.addWidget(QLabel("\n4. 线程并发数:"))
+        self.spin_threads = QSpinBox()
+        self.spin_threads.setRange(10, 3000)
+        self.spin_threads.setValue(200) # 默认给个 200
+        self.spin_threads.setStyleSheet("background-color: #161b22; color: #c9d1d9; padding: 4px;")
+        self.spin_threads.valueChanged.connect(self.save_state) # 实时保存
+        hl_threads.addWidget(self.spin_threads)
+        ll.addLayout(hl_threads)
+
         run_layout = QHBoxLayout()
         self.btn_run = QPushButton("🚀 启动并发测绘")
         self.btn_run.clicked.connect(self.start_scan)
@@ -840,24 +857,35 @@ class IPFissionDialog(QDialog):
         sp.setStretchFactor(0, 1); sp.setStretchFactor(1, 3)
         ml.addWidget(sp)
 
-    # ========== 状态保存与读取 ==========
     def save_state(self):
         if self.proj_dir:
             try:
                 json.dump({
-                    "ips": self.input_ips.toPlainText(), "kws": self.input_kws.text(), "ports": self.input_ports.text()
+                    "ips": self.input_ips.toPlainText(), 
+                    "kws": self.input_kws.text(), 
+                    "ports": self.input_ports.text(),
+                    "threads": self.spin_threads.value() # 🎯 保存并发值
                 }, open(os.path.join(self.proj_dir, "fission.json"), 'w'))
             except: pass
 
     def load_state(self):
         if self.proj_dir and os.path.exists(os.path.join(self.proj_dir, "fission.json")):
             try:
-                self.input_ips.blockSignals(True); self.input_kws.blockSignals(True); self.input_ports.blockSignals(True)
+                self.input_ips.blockSignals(True)
+                self.input_kws.blockSignals(True)
+                self.input_ports.blockSignals(True)
+                self.spin_threads.blockSignals(True) # 🎯 屏蔽信号
+                
                 s = json.load(open(os.path.join(self.proj_dir, "fission.json")))
                 self.input_ips.setPlainText(s.get("ips", ""))
                 self.input_kws.setText(s.get("kws", ""))
                 self.input_ports.setText(s.get("ports", "80, 443, 8080, 8443, 8888, 7001"))
-                self.input_ips.blockSignals(False); self.input_kws.blockSignals(False); self.input_ports.blockSignals(False)
+                self.spin_threads.setValue(s.get("threads", 200)) # 🎯 读取并发值
+                
+                self.input_ips.blockSignals(False)
+                self.input_kws.blockSignals(False)
+                self.input_ports.blockSignals(False)
+                self.spin_threads.blockSignals(False) # 🎯 恢复信号
             except: pass
 
     def closeEvent(self, event):
@@ -905,6 +933,9 @@ class IPFissionDialog(QDialog):
         self.btn_run.setEnabled(False); self.btn_run.setText(f"🚀 正在测绘 {len(target_ips)} 个独立IP...")
         self.btn_stop.setEnabled(True); self.btn_stop.setText("🛑 停止")
         
+        # 🎯 直接读取本地并发框的值！
+        local_concurrency = self.spin_threads.value()
+
         # 传入端口配置 (把原先的 self.thread 改为 self.work_thread)
         self.work_thread = FissionTask(list(target_ips), self.input_kws.text(), self.input_ports.text())
         self.work_thread.res_sig.connect(self.add_row)
