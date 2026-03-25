@@ -1,0 +1,171 @@
+[16:58:07] [SUCCESS] 工程载入成功，IP:0, Host:0
+[16:58:12] [INFO] 启动任务: fscan.exe -h szbayy.com -p 80,443,8080,8443,8081 -m web -np -t 100
+[16:58:12] [DEBUG] [FScan] ___                              _
+[16:58:12] [DEBUG] [FScan] / _ \     ___  ___ _ __ __ _  ___| | __
+[16:58:12] [DEBUG] [FScan] / /_\/____/ __|/ __| '__/ _` |/ __| |/ /
+[16:58:12] [DEBUG] [FScan] / /_\\_____\__ \ (__| | | (_| | (__|   <
+[16:58:12] [DEBUG] [FScan] \____/     |___/\___|_|  \__,_|\___|_|\_\
+[16:58:12] [DEBUG] [FScan] fscan version: 1.8.4
+[16:58:12] [DEBUG] [FScan] start infoscan
+[16:58:12] [DEBUG] [FScan] [*] alive ports len is: 0
+[16:58:12] [DEBUG] [FScan] start vulscan
+[16:58:12] [DEBUG] [FScan] 已完成 0/0
+[16:58:12] [DEBUG] [FScan] [*] 扫描结束,耗时: 19.4792ms
+[16:58:12] [SUCCESS] FScan 执行结束
+[16:58:13] [INFO] 启动任务: uv run D:/tmp/anjian/pj/st/OneForAll/oneforall.py --target szbayy.com run
+[16:58:13] [DEBUG] [OFA] warning: `VIRTUAL_ENV=D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+[16:58:14] [DEBUG] [OFA] OneForAll is a powerful subdomain integration tool
+[16:58:14] [DEBUG] [OFA] ___             _ _
+[16:58:14] [DEBUG] [OFA] ___ ___ ___|  _|___ ___ ___| | | {v0.4.5 #dev}
+[16:58:14] [DEBUG] [OFA] | . |   | -_|  _| . |  _| .'| | |
+[16:58:14] [DEBUG] [OFA] |___|_|_|___|_| |___|_| |__,|_|_| git.io/fjHT1
+[16:58:14] [DEBUG] [OFA] OneForAll is under development, please update before each use!
+[16:58:14] [DEBUG] [OFA] [*] Starting OneForAll @ 2026-03-25 16:58:14
+[16:58:14] [DEBUG] [OFA] 16:58:14,375 [INFOR] utils:532 - Checking dependent environment
+[16:58:14] [DEBUG] [OFA] 16:58:14,376 [INFOR] utils:544 - Checking network environment
+[16:58:15] [DEBUG] [OFA] 16:58:15,088 [INFOR] utils:555 - Checking for the latest version
+[16:58:16] [DEBUG] [OFA] 16:58:15,877 [INFOR] utils:579 - The current version v0.4.5 is already the latest version
+[16:58:16] [DEBUG] [OFA] 16:58:15,880 [INFOR] oneforall:241 - Start running OneForAll
+[16:58:16] [DEBUG] [OFA] 16:58:15,881 [INFOR] oneforall:246 - Got 1 domains
+[16:58:16] [DEBUG] [OFA] 16:58:15,937 [INFOR] wildcard:108 - Detecting szbayy.com use wildcard dns record or not
+[16:58:16] [DEBUG] [OFA] 16:58:16,803 [ALERT] wildcard:123 - The domain szbayy.com disables wildcard
+[16:58:16] [DEBUG] [OFA] 16:58:16,804 [INFOR] collect:44 - Start collecting subdomains of szbayy.com
+[16:58:17] [DEBUG] [OFA] 16:58:17,020 [INFOR] module:63 - CertInfo module took 0.1 seconds found 0 subdomains
+[16:58:17] [DEBUG] [OFA] 16:58:17,097 [ERROR] module:129 - HTTPSConnectionPool(host='ce.baidu.com', port=443): Max retries exceeded with url: /index/getRelatedSites?site_address=szbayy.com (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x0000018B02D7EA10>: Failed to establish a new connection: [Errno 11001] getaddrinfo failed'))
+[16:58:18] [DEBUG] [OFA] 16:58:18,051 [ERROR] module:129 - HTTPSConnectionPool(host='riddler.io', port=443): Max retries exceeded with url: /search?q=pld%3Aszbayy.com (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x0000018B02D44D90>: Failed to establish a new connection: [Errno 11001] getaddrinfo failed'))
+[16:58:18] [DEBUG] [OFA] 16:58:18,097 [ALERT] utils:273 - GET https://search.censys.io/api/v2/certificates/search?q=names%3A+szbayy.com&per_page=100 302 - Found 71
+[16:58:18] [DEBUG] [OFA] 16:58:18,133 [INFOR] module:63 - NSECCheck module took 0.2 seconds found 0 subdomains
+[16:58:18] [DEBUG] [OFA] 16:58:18,151 [INFOR] module:63 - ChinazQuery module took 1.0 seconds found 1 subdomains
+[16:58:18] [DEBUG] [OFA] 16:58:18,152 [ALERT] utils:282 - {'code': 302, 'status': 'Found', 'result': 'The resource was found at'}
+[16:58:18] [DEBUG] [OFA] 16:58:18,154 [INFOR] module:63 - MySSLQuery module took 1.2 seconds found 9 subdomains
+[16:58:18] [DEBUG] [OFA] 16:58:18,155 [INFOR] module:63 - IP138Query module took 1.1 seconds found 5 subdomains
+[16:58:18] [DEBUG] [OFA] 16:58:18,159 [INFOR] module:63 - CeBaiduQuery module took 1.1 seconds found 0 subdomains
+[16:58:18] [DEBUG] [OFA] 16:58:18,161 [INFOR] module:63 - RiddlerQuery module took 1.1 seconds found 0 subdomains
+[16:58:18] [DEBUG] [OFA] 16:58:18,165 [INFOR] module:63 - QuerySPF module took 1.1 seconds found 0 subdomains
+[16:58:18] [DEBUG] [OFA] 16:58:18,165 [INFOR] module:63 - QueryTXT module took 1.1 seconds found 0 subdomains
+[16:58:18] [DEBUG] [OFA] 16:58:18,172 [INFOR] module:63 - QueryMX module took 1.1 seconds found 0 subdomains
+[16:58:18] [DEBUG] [OFA] 16:58:18,174 [INFOR] module:63 - CrossDomainCheck module took 1.3 seconds found 0 subdomains
+[16:58:18] [DEBUG] [OFA] 16:58:18,175 [INFOR] module:63 - RobotsCheck module took 1.2 seconds found 0 subdomains
+[16:58:18] [DEBUG] [OFA] 16:58:18,176 [INFOR] module:63 - QuerySOA module took 1.1 seconds found 0 subdomains
+[16:58:18] [DEBUG] [OFA] 16:58:18,312 [ALERT] utils:273 - GET https://urlscan.io/api/v1/search/?q=domain%3Aszbayy.com 429 - Too Many Requests 564
+[16:58:19] [DEBUG] [OFA] 16:58:18,945 [INFOR] module:63 - CensysAPIQuery module took 1.3 seconds found 0 subdomains
+[16:58:19] [DEBUG] [OFA] 16:58:19,207 [ALERT] utils:273 - GET https://www.dnsgrep.cn/subdomain/szbayy.com 403 - Forbidden 5598
+[16:58:19] [DEBUG] [OFA] 16:58:19,236 [ERROR] module:129 - HTTPSConnectionPool(host='www.wuzhuiso.com', port=443): Max retries exceeded with url: /s?q=site%3A.szbayy.com&pn=1&src=page_www&fr=none (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x0000018B02D286D0>: Failed to establish a new connection: [Errno 11001] getaddrinfo failed'))
+[16:58:19] [DEBUG] [OFA] 16:58:19,486 [ALERT] utils:273 - GET https://fullhunt.io/api/v1/domain/szbayy.com/subdomains 429 - Too Many Requests 87
+[16:58:19] [DEBUG] [OFA] 16:58:19,487 [INFOR] module:63 - CSPCheck module took 1.3 seconds found 0 subdomains
+[16:58:19] [DEBUG] [OFA] 16:58:19,572 [ALERT] utils:273 - GET https://www.virustotal.com/ui/domains/szbayy.com/subdomains?limit=40&cursor= 429 - Too Many Requests 105
+[16:58:19] [DEBUG] [OFA] 16:58:19,676 [INFOR] module:63 - WindvaneQuery module took 1.6 seconds found 0 subdomains
+[16:58:19] [DEBUG] [OFA] 16:58:19,676 [ALERT] utils:273 - GET https://api.threatminer.org/v2/domain.php?q=szbayy.com&rt=5 500 - Internal Server Error 0
+[16:58:19] [DEBUG] [OFA] 16:58:19,678 [INFOR] module:63 - CertSpotterQuery module took 1.8 seconds found 8 subdomains
+[16:58:19] [DEBUG] [OFA] 16:58:19,681 [INFOR] module:63 - Sublist3rQuery module took 1.9 seconds found 1 subdomains
+[16:58:19] [DEBUG] [OFA] 16:58:19,681 [INFOR] module:63 - CrtshQuery module took 2.1 seconds found 16 subdomains
+[16:58:19] [DEBUG] [OFA] 16:58:19,682 [INFOR] module:63 - SiteDossierQuery module took 1.9 seconds found 2 subdomains
+[16:58:19] [DEBUG] [OFA] 16:58:19,690 [INFOR] module:63 - HackerTargetQuery module took 2.2 seconds found 9 subdomains
+[16:58:19] [DEBUG] [OFA] 16:58:19,694 [INFOR] module:63 - ShodanAPISearch module took 2.4 seconds found 12 subdomains
+[16:58:19] [DEBUG] [OFA] 16:58:19,695 [ALERT] utils:282 - {'error': 'Rate Limit Exceeded', 'message': 'Too many requests. Please try again later.'}
+[16:58:19] [DEBUG] [OFA] 16:58:19,699 [ALERT] utils:282 - {'error': {'code': 'RecaptchaRequiredError', 'message': 'reCAPTCHA validation failed, please try again'}}
+[16:58:19] [DEBUG] [OFA] 16:58:19,700 [INFOR] module:63 - SecurityTrailsAPIQuery module took 2.6 seconds found 24 subdomains
+[16:58:19] [DEBUG] [OFA] 16:58:19,700 [INFOR] module:63 - QueryNS module took 2.6 seconds found 0 subdomains
+[16:58:19] [DEBUG] [OFA] 16:58:19,703 [INFOR] module:63 - UrlscanQuery module took 2.6 seconds found 0 subdomains
+[16:58:19] [DEBUG] [OFA] 16:58:19,705 [INFOR] module:63 - SogouSearch module took 2.6 seconds found 1 subdomains
+[16:58:19] [DEBUG] [OFA] 16:58:19,809 [INFOR] module:63 - DnsgrepQuery module took 2.6 seconds found 0 subdomains
+[16:58:19] [DEBUG] [OFA] 16:58:19,815 [INFOR] module:63 - WzSearch module took 2.6 seconds found 0 subdomains
+[16:58:19] [DEBUG] [OFA] 16:58:19,837 [INFOR] module:63 - ThreatMinerQuery module took 2.6 seconds found 0 subdomains
+[16:58:19] [DEBUG] [OFA] 16:58:19,842 [INFOR] module:63 - NetCraftQuery module took 2.7 seconds found 0 subdomains
+[16:58:19] [DEBUG] [OFA] 16:58:19,848 [INFOR] module:63 - AXFRCheck module took 2.9 seconds found 0 subdomains
+[16:58:19] [DEBUG] [OFA] 16:58:19,850 [INFOR] module:63 - FullHuntAPIQuery module took 2.8 seconds found 0 subdomains
+[16:58:19] [DEBUG] [OFA] 16:58:19,852 [INFOR] module:63 - VirusTotalQuery module took 2.7 seconds found 0 subdomains
+[16:58:19] [DEBUG] [OFA] 16:58:19,902 [INFOR] module:63 - GiteeSearch module took 2.8 seconds found 0 subdomains
+[16:58:20] [DEBUG] [OFA] 16:58:20,103 [INFOR] module:63 - BaiduSearch module took 2.8 seconds found 0 subdomains
+[16:58:20] [DEBUG] [OFA] 16:58:20,107 [INFOR] module:63 - RapidDNSQuery module took 3.0 seconds found 2 subdomains
+[16:58:20] [DEBUG] [OFA] 16:58:20,149 [INFOR] module:63 - SitemapCheck module took 3.2 seconds found 0 subdomains
+[16:58:20] [DEBUG] [OFA] 16:58:20,418 [INFOR] module:63 - VirusTotalAPIQuery module took 3.3 seconds found 14 subdomains
+[16:58:20] [DEBUG] [OFA] 16:58:20,570 [ALERT] utils:273 - POST https://dnsdumpster.com/ 403 - Forbidden 5973
+[16:58:20] [DEBUG] [OFA] 16:58:20,579 [INFOR] module:63 - DNSDumpsterQuery module took 3.5 seconds found 0 subdomains
+[16:58:20] [DEBUG] [OFA] 16:58:20,609 [INFOR] module:63 - HunterAPISearch module took 3.5 seconds found 19 subdomains
+[16:58:20] [DEBUG] [OFA] 16:58:20,636 [INFOR] module:63 - ZoomEyeAPISearch module took 3.5 seconds found 3 subdomains
+[16:58:20] [DEBUG] [OFA] 16:58:20,692 [INFOR] module:63 - AnubisQuery module took 3.7 seconds found 0 subdomains
+[16:58:21] [DEBUG] [OFA] 16:58:21,710 [INFOR] module:63 - SoSearch module took 4.6 seconds found 6 subdomains
+[16:58:21] [DEBUG] [OFA] 16:58:21,825 [INFOR] module:63 - BingSearch module took 4.7 seconds found 0 subdomains
+[16:58:25] [DEBUG] [OFA] 16:58:24,920 [INFOR] module:63 - GithubAPISearch module took 7.8 seconds found 2 subdomains
+[16:58:26] [DEBUG] [OFA] 16:58:26,721 [INFOR] module:63 - YandexSearch module took 9.6 seconds found 0 subdomains
+[16:58:30] [DEBUG] [OFA] 16:58:30,023 [ERROR] module:129 - HTTPSConnectionPool(host='transparencyreport.google.com', port=443): Max retries exceeded with url: /transparencyreport/api/v3/httpsreport/ct/certsearch?include_expired=true&include_subdomains=true&domain=szbayy.com (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x0000018B02D23A50>, 'Connection to transparencyreport.google.com timed out. (connect timeout=13)'))
+[16:58:30] [DEBUG] [OFA] 16:58:30,024 [INFOR] module:63 - GoogleQuery module took 13.1 seconds found 0 subdomains
+[16:58:30] [DEBUG] [OFA] 16:58:30,476 [ERROR] module:159 - HTTPSConnectionPool(host='www.dnsscan.cn', port=443): Max retries exceeded with url: /dns.html?keywords=szbayy.com&page=1 (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x0000018B02DAFC90>, 'Connection to www.dnsscan.cn timed out. (connect timeout=13)'))
+[16:58:30] [DEBUG] [OFA] 16:58:30,476 [INFOR] module:63 - QianXunQuery module took 13.4 seconds found 0 subdomains
+[16:58:31] [DEBUG] [OFA] 16:58:31,100 [ERROR] module:129 - HTTPSConnectionPool(host='otx.alienvault.com', port=443): Read timed out. (read timeout=13)
+[16:58:31] [DEBUG] [OFA] 16:58:31,162 [ERROR] module:129 - HTTPSConnectionPool(host='www.google.com', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x0000018B02D47010>, 'Connection to www.google.com timed out. (connect timeout=13)'))
+[16:58:31] [DEBUG] [OFA] 16:58:31,163 [INFOR] module:63 - GoogleSearch module took 14.1 seconds found 0 subdomains
+[16:58:31] [DEBUG] [OFA] 16:58:31,178 [ERROR] module:129 - HTTPSConnectionPool(host='search.yahoo.com', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x0000018B031C7E50>, 'Connection to search.yahoo.com timed out. (connect timeout=13)'))
+[16:58:31] [DEBUG] [OFA] 16:58:31,178 [INFOR] module:63 - YahooSearch module took 14.1 seconds found 0 subdomains
+[16:58:32] [DEBUG] [OFA] 16:58:32,223 [ERROR] module:129 - HTTPSConnectionPool(host='www.search.ask.com', port=443): Max retries exceeded with url: /web?q=site%3A.szbayy.com&page=1 (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x0000018B02DBF950>, 'Connection to www.search.ask.com timed out. (connect timeout=13)'))
+[16:58:32] [DEBUG] [OFA] 16:58:32,224 [INFOR] module:63 - AskSearch module took 15.1 seconds found 0 subdomains
+[16:58:44] [DEBUG] [OFA] 16:58:44,416 [ERROR] module:129 - HTTPSConnectionPool(host='otx.alienvault.com', port=443): Read timed out. (read timeout=13)
+[16:58:44] [DEBUG] [OFA] 16:58:44,416 [INFOR] module:63 - AlienVaultQuery module took 27.3 seconds found 0 subdomains
+[16:58:48] [DEBUG] [OFA] 16:58:48,615 [ERROR] module:129 - HTTPSConnectionPool(host='freeapi.robtex.com', port=443): Read timed out. (read timeout=27)
+[16:58:51] [DEBUG] [OFA] 16:58:51,164 [INFOR] module:63 - QuakeAPISearch module took 34.1 seconds found 19 subdomains
+[16:59:04] [DEBUG] [OFA] 16:59:04,237 [INFOR] module:63 - RobtexQuery module took 47.2 seconds found 0 subdomains
+[17:00:03] [DEBUG] [OFA] 17:00:03,296 [ERROR] module:129 - HTTPSConnectionPool(host='www.googleapis.com', port=443): Max retries exceeded with url: /customsearch/v1?key=AIzaSyCY6s7Fk9ZPj55Pw34255OX3Ddd6UFh7Mk&cx=57c599ac68a734a6e&q=site%3A.szbayy.com&fields=items%2Flink&start=1&num=10 (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x0000018B032A0910>, 'Connection to www.googleapis.com timed out. (connect timeout=13)'))
+[17:00:03] [DEBUG] [OFA] 17:00:03,296 [INFOR] module:63 - GoogleAPISearch module took 106.2 seconds found 0 subdomains
+[17:00:10] [DEBUG] [OFA] 17:00:10,518 [INFOR] module:63 - BruteSRV module took 7.2 seconds found 0 subdomains
+[17:00:10] [DEBUG] [OFA] 17:00:10,551 [INFOR] brute:460 - Start running Brute module
+[17:00:10] [DEBUG] [OFA] 17:00:10,552 [INFOR] brute:410 - Blasting szbayy.com
+[17:00:10] [DEBUG] [OFA] 17:00:10,565 [INFOR] brute:119 - Querying NS records of szbayy.com
+[17:00:10] [DEBUG] [OFA] 17:00:10,590 [INFOR] brute:129 - szbayy.com's authoritative name server is ['dns9.hichina.com.', 'dns10.hichina.com.']
+[17:00:10] [DEBUG] [OFA] 17:00:10,590 [INFOR] brute:99 - Querying A record from authoritative name server: ['dns9.hichina.com.', 'dns10.hichina.com.']
+[17:00:10] [DEBUG] [OFA] 17:00:10,628 [INFOR] brute:114 - Authoritative name server A record result: ['120.76.107.42', '39.96.153.52', '47.118.199.202', '139.224.142.112', '139.224.142.122', '39.96.153.42', '47.118.199.212', '120.76.107.52', '139.224.142.111', '139.224.142.121', '39.96.153.51', '47.118.199.201', '39.96.153.41', '47.118.199.211', '120.76.107.51', '120.76.107.41']
+[17:00:10] [DEBUG] [OFA] 17:00:10,629 [INFOR] brute:347 - Generating dictionary for szbayy.com
+[17:00:10] [DEBUG] [OFA] 17:00:10,834 [ALERT] utils:695 - Please check whether fwd.szbayy.com is correct or not
+[17:00:11] [DEBUG] [OFA] 17:00:10,843 [INFOR] brute:365 - Dictionary size: 95247
+[17:00:11] [DEBUG] [OFA] 17:00:10,901 [INFOR] brute:441 - Running massdns to brute subdomains
+[17:00:39] [DEBUG] [OFA] 17:00:39,003 [INFOR] brute:197 - Counting IP cname appear times
+[17:00:39] [DEBUG] [OFA] 17:00:39,006 [INFOR] brute:238 - Processing result
+[17:00:39] [DEBUG] [OFA] 17:00:39,010 [ALERT] brute:451 - Brute module takes 28.5 seconds, found 5 subdomains of szbayy.com
+[17:00:39] [DEBUG] [OFA] 17:00:39,023 [INFOR] brute:489 - Finished Brute module to brute szbayy.com
+[17:00:39] [DEBUG] [OFA] 17:00:39,058 [INFOR] resolve:143 - Start resolving subdomains of szbayy.com
+[17:00:39] [DEBUG] [OFA] 17:00:39,079 [INFOR] resolve:166 - Running massdns to resolve subdomains
+[17:00:41] [DEBUG] [OFA] 17:00:41,590 [INFOR] resolve:104 - Processing resolved results
+[17:00:41] [DEBUG] [OFA] 17:00:41,595 [INFOR] resolve:172 - Finished resolve subdomains of szbayy.com
+[17:00:41] [DEBUG] [OFA] 17:00:41,595 [INFOR] resolve:61 - Saving resolved results
+[17:00:41] [DEBUG] [OFA] 17:00:41,633 [INFOR] request:258 - Start requesting subdomains of szbayy.com
+[17:00:41] [DEBUG] [OFA] 17:00:41,634 [INFOR] request:39 - Port range:[80, 443]
+[17:00:41] [DEBUG] [OFA] 17:00:41,635 [INFOR] request:56 - Generating request urls
+[17:00:41] [DEBUG] [OFA] 17:00:41,636 [INFOR] request:217 - Requesting urls in bulk
+[17:00:55] [DEBUG] [OFA] 0it [00:00, ?it/s]Request Progress:  14%|███▌                      | 5/36 [00:00<00:00, 49.53it/s]Request Progress:  31%|███████▋                 | 11/36 [00:00<00:00, 27.06it/s]Request Progress:  42%|██████████▍              | 15/36 [00:00<00:00, 23.56it/s]Request Progress:  50%|████████████▌            | 18/36 [00:00<00:00, 21.47it/s]Request Progress:  92%|██████████████████████▉  | 33/36 [00:01<00:00, 26.80it/s]Request Progress: 37it [00:01, 21.22it/s]                                       Request Progress: 37it [00:13,  2.66it/s]
+[17:00:55] [DEBUG] [OFA] 17:00:55,547 [INFOR] request:264 - Found that szbayy.com has 29 alive subdomains
+[17:00:55] [DEBUG] [OFA] 17:00:55,548 [INFOR] finder:23 - Start Finder module
+[17:00:55] [DEBUG] [OFA] 17:00:55,595 [INFOR] request:217 - Requesting urls in bulk
+[17:00:55] [DEBUG] [OFA] 0it [00:00, ?it/s]Request Progress: 1it [00:00, 661.35it/s]
+[17:00:55] [DEBUG] [OFA] 17:00:55,599 [INFOR] module:63 - Finder module took 0.1 seconds found 0 subdomains
+[17:00:55] [DEBUG] [OFA] 17:00:55,601 [INFOR] module:63 - Finder module took 0.1 seconds found 0 subdomains
+[17:00:55] [DEBUG] [OFA] 17:00:55,602 [INFOR] resolve:143 - Start resolving subdomains of szbayy.com
+[17:00:55] [DEBUG] [OFA] 17:00:55,607 [INFOR] request:258 - Start requesting subdomains of szbayy.com
+[17:00:55] [DEBUG] [OFA] 17:00:55,609 [INFOR] request:39 - Port range:[80, 443]
+[17:00:55] [DEBUG] [OFA] 17:00:55,609 [INFOR] request:56 - Generating request urls
+[17:00:55] [DEBUG] [OFA] 0it [00:00, ?it/s]17:00:55,610 [INFOR] request:217 - Requesting urls in bulk
+[17:00:55] [DEBUG] [OFA] Request Progress: 1it [00:00, 119.40it/s]
+[17:00:55] [DEBUG] [OFA] 17:00:55,628 [INFOR] request:264 - Found that szbayy.com has 29 alive subdomains
+[17:00:55] [DEBUG] [OFA] 17:00:55,628 [INFOR] altdns:203 - Start altdns module
+[17:00:55] [DEBUG] [OFA] 17:00:55,815 [INFOR] altdns:210 - The altdns module generated 6 new subdomains
+[17:00:55] [DEBUG] [OFA] 17:00:55,816 [INFOR] resolve:143 - Start resolving subdomains of szbayy.com
+[17:00:55] [DEBUG] [OFA] 17:00:55,848 [INFOR] resolve:166 - Running massdns to resolve subdomains
+[17:00:57] [DEBUG] [OFA] 17:00:57,716 [INFOR] resolve:104 - Processing resolved results
+[17:00:57] [DEBUG] [OFA] 17:00:57,717 [ALERT] resolve:36 - No valid resolved result
+[17:00:57] [DEBUG] [OFA] 17:00:57,717 [INFOR] resolve:172 - Finished resolve subdomains of szbayy.com
+[17:00:57] [DEBUG] [OFA] 17:00:57,721 [INFOR] request:258 - Start requesting subdomains of szbayy.com
+[17:00:57] [DEBUG] [OFA] 17:00:57,722 [INFOR] request:39 - Port range:[80, 443]
+[17:00:57] [DEBUG] [OFA] 17:00:57,724 [INFOR] request:56 - Generating request urls
+[17:00:57] [DEBUG] [OFA] 0it [00:00, ?it/s]17:00:57,725 [INFOR] request:217 - Requesting urls in bulk
+[17:00:57] [DEBUG] [OFA] Request Progress: 1it [00:00, 214.00it/s]
+[17:00:57] [DEBUG] [OFA] 17:00:57,736 [INFOR] request:264 - Found that szbayy.com has 29 alive subdomains
+[17:00:58] [DEBUG] [OFA] 17:00:58,179 [ALERT] utils:202 - The D:\tmp\anjian\pj\st\OneForAll\results\szbayy.com.csv exists and will be overwritten
+[17:00:58] [DEBUG] [OFA] 17:00:58,182 [ALERT] export:66 - The subdomain result for szbayy.com: D:\tmp\anjian\pj\st\OneForAll\results\szbayy.com.csv
+[17:00:58] [DEBUG] [OFA] 17:00:58,184 [INFOR] oneforall:255 - Finished OneForAll
+[17:00:58] [SUCCESS] OFA 执行结束
+[17:02:46] [SUCCESS] 🔗 自定义绑定成功！已注入并去重 36 个 IP 和 36 个域名。
+[17:03:05] [SUCCESS] 🧹 资产清理完毕！IP池与域名池已完成一键去重。
+[17:03:11] [SUCCESS] 🧹 资产清理完毕！IP池与域名池已完成一键去重。
+[17:03:50] [SUCCESS] 🧹 资产清理完毕！IP池与域名池已完成一键去重。
+[17:20:50] [SUCCESS] 🔗 自定义绑定成功！已注入并去重 9 个 IP 和 9 个域名。
+[17:20:53] [SUCCESS] 🧹 资产清理完毕！IP池与域名池已完成一键去重。
+[17:22:26] [SUCCESS] 🔗 自定义绑定成功！已注入并去重 9 个 IP 和 9 个域名。

@@ -965,7 +965,18 @@ class AssetCommander(QMainWindow):
         self.csv_timer = QTimer(self)
         self.csv_timer.timeout.connect(self.flush_csv_buffer)
         self.csv_timer.start(2000) # 每 2 秒批量落盘一次
-
+    def select_dict(self):
+        path, _ = QFileDialog.getOpenFileName(self, "选择无差别碰撞字典", "", "Text Files (*.txt);;All Files (*)")
+        if path:
+            self.dict_path = path
+            try:
+                # 稍微估算下文件大小/行数给老哥看
+                size_mb = os.path.getsize(path) / (1024 * 1024)
+                self.lbl_dict_info.setText(f"已挂载: {os.path.basename(path)} ({size_mb:.2f} MB)")
+                self.cb_enable_dict.setChecked(True)
+                self.sv_sett()
+            except Exception as e:
+                QMessageBox.warning(self, "错误", f"读取字典失败: {e}")
 
     def inject_internal_hosts(self):
         # 涵盖了更全面的实战 Bypass 字典、云环境元数据、容器环境以及特殊编码绕过
@@ -1169,7 +1180,28 @@ class AssetCommander(QMainWindow):
         hl2 = QHBoxLayout(); self.c_abs = QCheckBox("绝对路径"); self.c_waf = QCheckBox("注入 WAF 绕过头"); self.c_sni = QCheckBox("强同步 SNI")
         for c in[self.c_abs, self.c_waf, self.c_sni]: c.stateChanged.connect(self.sv_sett); hl2.addWidget(c)
         hl2.addStretch(1); pgl.addLayout(hl1); pgl.addLayout(hl2)
+# --- [新增] 无差别盲打外挂字典 UI ---
+        self.dict_group = QGroupBox("🔥 泛解析/无差别字典盲打 (内存级加载，防UI卡死)")
+        self.dict_group.setStyleSheet("QGroupBox { border: 1px solid #30363d; margin-top: 10px; font-weight: bold; color: #e3b341; }")
+        dict_layout = QHBoxLayout(self.dict_group)
 
+        self.cb_enable_dict = QCheckBox("启用外挂字典")
+        self.cb_enable_dict.stateChanged.connect(self.sv_sett)
+
+        self.btn_sel_dict = QPushButton("📂 载入超大体积字典")
+        self.btn_sel_dict.setStyleSheet("background-color: #d29922; color: white; padding: 4px; border-radius: 3px;")
+        self.btn_sel_dict.clicked.connect(self.select_dict)
+
+        self.lbl_dict_info = QLabel("未加载文件")
+        self.lbl_dict_info.setStyleSheet("color: #8b949e;")
+
+        dict_layout.addWidget(self.cb_enable_dict)
+        dict_layout.addWidget(self.btn_sel_dict)
+        dict_layout.addWidget(self.lbl_dict_info)
+        dict_layout.addStretch(1)
+        
+        # 把这个框加到左侧主布局里
+        ll.addWidget(self.dict_group)
         # --- 并发与底部控制 ---
         hl_ctrl = QHBoxLayout()
         hl_ctrl.addWidget(QLabel("并发:"))
@@ -1295,7 +1327,19 @@ class AssetCommander(QMainWindow):
             self.c_k.setChecked(s.get('k',True)); self.c_8.setChecked(s.get('80',True)); self.c_4.setChecked(s.get('443',True))
             self.c_n.setChecked(s.get('n',True)); self.c_abs.setChecked(s.get('abs',False)); self.c_waf.setChecked(s.get('waf',False))
             self.c_sni.setChecked(s.get('sni',False))
-        
+            
+            self.c_sni.setChecked(s.get('sni',False))
+            
+            # --- 新增字典恢复逻辑 ---
+            self.dict_path = s.get('dict_path', '')
+            self.cb_enable_dict.setChecked(s.get('dict_enable', False))
+            if self.dict_path and os.path.exists(self.dict_path):
+                size_mb = os.path.getsize(self.dict_path) / (1024 * 1024)
+                self.lbl_dict_info.setText(f"已记忆: {os.path.basename(self.dict_path)} ({size_mb:.2f} MB)")
+            else:
+                self.lbl_dict_info.setText("未加载文件")
+                self.cb_enable_dict.setChecked(False)
+
         # --- 核心修复：更换为 CSV 并加入 UI 防卡死锁 ---
         rp = os.path.join(d, "results.csv")
         if os.path.exists(rp):
@@ -1323,10 +1367,13 @@ class AssetCommander(QMainWindow):
     def sv_sett(self):
         if self.proj:
             json.dump({
-                'target': self.t_ed.text(), # 增加保存 target
+                'target': self.t_ed.text(),
                 'k':self.c_k.isChecked(), '80':self.c_8.isChecked(), '443':self.c_4.isChecked(),
                 'n':self.c_n.isChecked(), 'abs':self.c_abs.isChecked(), 'waf':self.c_waf.isChecked(),
-                'sni':self.c_sni.isChecked()
+                'sni':self.c_sni.isChecked(),
+                # --- 新增这两行 ---
+                'dict_enable': self.cb_enable_dict.isChecked(),
+                'dict_path': getattr(self, 'dict_path', '')
             }, open(os.path.join(self.proj, "settings.json"),'w'))
 
     @Slot(str, str)
@@ -1409,8 +1456,24 @@ class AssetCommander(QMainWindow):
         if not self.proj: return QMessageBox.warning(self, "!", "请先打开或新建一个工程")
         if hasattr(self, 'cth') and self.cth.isRunning(): return self.log("ERROR", "上一个对撞任务仍在进行中！")
         il, dl = self.i_pl.toPlainText().split(), self.d_pl.toPlainText().split()
+
+        # ================== 核心合并逻辑 ==================
+        if hasattr(self, 'cb_enable_dict') and self.cb_enable_dict.isChecked():
+            if hasattr(self, 'dict_path') and os.path.exists(self.dict_path):
+                try:
+                    self.log("INFO", "⏳ 正在将外挂字典加载入内存，请稍候...")
+                    with open(self.dict_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        dict_lines = [line.strip() for line in f if line.strip()]
+                        dl.extend(dict_lines) # 直接把字典接到原有域名池屁股后面
+                    self.log("SUCCESS", f"📂 外挂字典挂载完毕！共向内存注入 {len(dict_lines)} 个暗弹 Payload。")
+                except Exception as e:
+                    self.log("ERROR", f"外挂字典读取失败，已跳过盲打: {e}")
+            else:
+                self.log("ERROR", "外挂字典已勾选，但文件路径丢失或被移动，已忽略。")
+        # ==================================================
+
         if not il or not dl: return self.log("ERROR", "IP池或域名池为空！")
-        
+        dl = list(dict.fromkeys(dl))
         self.btn_c.setEnabled(False); self.btn_c.setText("识别中...")
         self.btn_stop.setEnabled(True); self.btn_stop.setText("停止")
         
@@ -1865,18 +1928,20 @@ class CustomBindDialog(QDialog):
         layout = QVBoxLayout(self)
         h_layout = QHBoxLayout()
         
+        # --- 修改点 1：左边换成域名输入 ---
         v1 = QVBoxLayout()
-        v1.addWidget(QLabel("1. 强制绑定的 IP (每行一个):"))
-        self.ip_edit = QTextEdit()
-        self.ip_edit.setPlaceholderText("例如: 192.168.1.100")
-        v1.addWidget(self.ip_edit)
-        h_layout.addLayout(v1)
-        
-        v2 = QVBoxLayout()
-        v2.addWidget(QLabel("2. 对应的域名 (每行一个):"))
+        v1.addWidget(QLabel("1. 对应的域名 (每行一个):"))
         self.domain_edit = QTextEdit()
         self.domain_edit.setPlaceholderText("例如: inner.target.com")
-        v2.addWidget(self.domain_edit)
+        v1.addWidget(self.domain_edit)
+        h_layout.addLayout(v1)
+        
+        # --- 修改点 2：右边换成 IP 输入 ---
+        v2 = QVBoxLayout()
+        v2.addWidget(QLabel("2. 强制绑定的 IP (每行一个):"))
+        self.ip_edit = QTextEdit()
+        self.ip_edit.setPlaceholderText("例如: 192.168.1.100")
+        v2.addWidget(self.ip_edit)
         h_layout.addLayout(v2)
         
         layout.addLayout(h_layout)
@@ -1886,6 +1951,7 @@ class CustomBindDialog(QDialog):
         layout.addWidget(self.btn_confirm)
 
     def accept_data(self):
+        # 提取数据（注意变量和输入框的对应关系已修正）
         self.ips = [x.strip() for x in self.ip_edit.toPlainText().split('\n') if x.strip()]
         self.domains = [x.strip() for x in self.domain_edit.toPlainText().split('\n') if x.strip()]
         
@@ -1893,6 +1959,13 @@ class CustomBindDialog(QDialog):
             QMessageBox.warning(self, "!", "IP 和 域名都不能为空！")
             return
             
+        # --- 增加防御机制：防止老哥手快再次贴反 ---
+        for ip in self.ips:
+            # 如果右侧 IP 框里出现了明显的英文字母（且不是 IPv6 的 a-f），大概率是贴成了域名
+            if re.search(r'[g-zG-Z]', ip): 
+                QMessageBox.warning(self, "格式异常", f"在 IP 框中检测到异常字符：\n【{ip}】\n\n请确认右侧输入的是纯 IP！")
+                return
+
         # 🌟 核心：将用户手动绑定的关系强制写入解析缓存！
         if self.proj_dir:
             p = os.path.join(self.proj_dir, "domain_to_ip.json")
