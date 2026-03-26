@@ -8,3 +8,9 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Local runtime data
+workspace/
+.vs/
+AssetCommander.log
+*.db
