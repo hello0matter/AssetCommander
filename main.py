@@ -1211,15 +1211,15 @@ class AssetCommander(QMainWindow):
         hl2 = QHBoxLayout(); self.c_abs = QCheckBox("绝对路径"); self.c_waf = QCheckBox("注入 WAF 绕过头"); self.c_sni = QCheckBox("强同步 SNI")
         for c in[self.c_abs, self.c_waf, self.c_sni]: c.stateChanged.connect(self.sv_sett); hl2.addWidget(c)
         hl2.addStretch(1); pgl.addLayout(hl1); pgl.addLayout(hl2)
-# --- [新增] 无差别盲打外挂字典 UI ---
-        self.dict_group = QGroupBox("🔥 泛解析/无差别字典盲打 (内存级加载，防UI卡死)")
+        # --- 无差别盲打外挂字典 UI (去臃肿精简版) ---
+        self.dict_group = QGroupBox("🔥 外挂字典盲打") # 砍掉臃肿的后缀说明
         self.dict_group.setStyleSheet("QGroupBox { border: 1px solid #30363d; margin-top: 10px; font-weight: bold; color: #e3b341; }")
         dict_layout = QHBoxLayout(self.dict_group)
 
-        self.cb_enable_dict = QCheckBox("启用外挂字典")
+        self.cb_enable_dict = QCheckBox("启用字典")
         self.cb_enable_dict.stateChanged.connect(self.sv_sett)
 
-        self.btn_sel_dict = QPushButton("📂 载入超大体积字典")
+        self.btn_sel_dict = QPushButton("📂 载入字典") # 名字改清爽
         self.btn_sel_dict.setStyleSheet("background-color: #d29922; color: white; padding: 4px; border-radius: 3px;")
         self.btn_sel_dict.clicked.connect(self.select_dict)
 
@@ -1492,11 +1492,28 @@ class AssetCommander(QMainWindow):
         if hasattr(self, 'cb_enable_dict') and self.cb_enable_dict.isChecked():
             if hasattr(self, 'dict_path') and os.path.exists(self.dict_path):
                 try:
-                    self.log("INFO", "⏳ 正在将外挂字典加载入内存，请稍候...")
+                    # 💡 提取目标输入框里的主域名
+                    target_input = self.t_ed.text().strip()
+                    clean_target = target_input.replace("http://", "").replace("https://", "").split(':')[0].split('/')[0]
+                    # 判断目标是否是一个有效的域名（而不是IP或者空）
+                    is_domain_target = bool(clean_target) and not re.match(RE_IP, clean_target)
+
+                    self.log("INFO", "⏳ 正在将外挂字典加载入内存，并自动拼接子域名...")
                     with open(self.dict_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        dict_lines = [line.strip() for line in f if line.strip()]
-                        dl.extend(dict_lines) # 直接把字典接到原有域名池屁股后面
-                    self.log("SUCCESS", f"📂 外挂字典挂载完毕！共向内存注入 {len(dict_lines)} 个暗弹 Payload。")
+                        dict_lines = []
+                        for line in f:
+                            word = line.strip()
+                            if not word: continue
+                            
+                            # 🎯 如果目标是个域名，且字典里的词不包含该域名，则进行强行拼接
+                            if is_domain_target and not word.endswith(clean_target):
+                                word = word.strip('.') # 防止字典词尾自带点号
+                                dict_lines.append(f"{word}.{clean_target}")
+                            else:
+                                dict_lines.append(word) # 如果目标是IP，或者字典已经是完整的完整域名，直接保留原样
+
+                        dl.extend(dict_lines) # 将拼接好的子域名直接注入底层引擎的变体池
+                    self.log("SUCCESS", f"📂 外挂字典挂载完毕！共生成并注入 {len(dict_lines)} 个子域名 Payload。")
                 except Exception as e:
                     self.log("ERROR", f"外挂字典读取失败，已跳过盲打: {e}")
             else:

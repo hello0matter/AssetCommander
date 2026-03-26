@@ -1,1 +1,1 @@
-{"target": "szbayy.com", "k": true, "80": true, "443": true, "n": true, "abs": false, "waf": false, "sni": false}
+{"target": "szbayy.com", "k": true, "80": true, "443": true, "n": true, "abs": false, "waf": false, "sni": false, "dict_enable": true, "dict_path": "C:/Users/Administrator/Downloads/bitquark-subdomains-top100000.txt"}
