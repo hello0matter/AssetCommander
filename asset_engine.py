@@ -4,12 +4,30 @@ import json
 import os
 import re
 import socket
+import traceback
+from collections import OrderedDict
 from datetime import datetime
 
 import aiohttp
 from PySide6.QtCore import QThread, Signal
 
-from asset_common import FAIL_SAMPLE_FILE, HTTP_STATUS, extract_title
+from asset_common import (
+    FAIL_SAMPLE_FILE,
+    HTTP_STATUS,
+    extract_title,
+    task_fingerprint,
+    write_global_log,
+)
+
+
+MAX_DOMAIN_CACHE_SIZE = 12000
+MAX_DNS_CACHE_SIZE = 8000
+WINDOWS_MAX_CONCURRENCY = 128
+WINDOWS_DICT_MAX_CONCURRENCY = 72
+WINDOWS_HUGE_DICT_MAX_CONCURRENCY = 48
+LARGE_DICT_SIZE_MB = 8
+HUGE_DICT_SIZE_MB = 32
+MAX_DNS_WORKERS = 48
 
 
 class CollTask(QThread):
@@ -30,10 +48,22 @@ class CollTask(QThread):
         dict_config,
     ):
         super().__init__()
+        self.dynamic_dict_enabled = bool(
+            dict_config
+            and dict_config.get("enabled")
+            and os.path.exists(dict_config.get("path", ""))
+        )
+        self.dict_size_mb = 0.0
+        if self.dynamic_dict_enabled:
+            try:
+                self.dict_size_mb = os.path.getsize(dict_config.get("path", "")) / (1024 * 1024)
+            except Exception:
+                self.dict_size_mb = 0.0
+        self.original_concurrency = max(1, int(concurrency))
         self.ips = ips
         self.domains = domains
         self.policies = policies
-        self.concurrency = concurrency
+        self.concurrency = self._compute_safe_concurrency(self.original_concurrency)
         self.proj_dir = proj_dir
         self.scanned_set = scanned_set
         self.dict_config = dict_config
@@ -41,8 +71,8 @@ class CollTask(QThread):
         self.fail_reason_counts = {}
         self.fail_samples = []
         self._stop_flag = False
-        self.domain_cache = {}
-        self.dns_cache = {}
+        self.domain_cache = OrderedDict()
+        self.dns_cache = OrderedDict()
         self._dns_locks = {}
         self._dom_locks = {}
         self.garbage_titles = [
@@ -68,11 +98,57 @@ class CollTask(QThread):
         ]
         self._load_dns_cache()
         self.dns_executor = concurrent.futures.ThreadPoolExecutor(
-            max_workers=concurrency + 50
+            max_workers=self._compute_dns_workers()
         )
 
     def stop(self):
         self._stop_flag = True
+
+    def _compute_safe_concurrency(self, requested):
+        safe = max(1, int(requested))
+        if os.name == "nt":
+            safe = min(safe, WINDOWS_MAX_CONCURRENCY)
+            if self.dynamic_dict_enabled:
+                if self.dict_size_mb >= HUGE_DICT_SIZE_MB:
+                    safe = min(safe, WINDOWS_HUGE_DICT_MAX_CONCURRENCY)
+                else:
+                    safe = min(safe, WINDOWS_DICT_MAX_CONCURRENCY)
+        return safe
+
+    def _compute_dns_workers(self):
+        dns_workers = min(MAX_DNS_WORKERS, max(8, self.concurrency // 2))
+        if os.name == "nt":
+            dns_workers = min(dns_workers, 32)
+            if self.dynamic_dict_enabled and self.dict_size_mb >= LARGE_DICT_SIZE_MB:
+                dns_workers = min(dns_workers, 24)
+        return dns_workers
+
+    def _create_event_loop(self):
+        if os.name == "nt":
+            try:
+                policy = asyncio.WindowsProactorEventLoopPolicy()
+                asyncio.set_event_loop_policy(policy)
+                loop = policy.new_event_loop()
+                asyncio.set_event_loop(loop)
+                return loop
+            except Exception as exc:
+                write_global_log("ERROR", f"创建 Proactor 事件循环失败，回退默认事件循环: {exc}")
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop
+
+    def _set_dns_cache(self, key, value):
+        self.dns_cache[key] = value
+        self.dns_cache.move_to_end(key)
+        while len(self.dns_cache) > MAX_DNS_CACHE_SIZE:
+            self.dns_cache.popitem(last=False)
+
+    def _set_domain_cache(self, key, value):
+        self.domain_cache[key] = value
+        self.domain_cache.move_to_end(key)
+        while len(self.domain_cache) > MAX_DOMAIN_CACHE_SIZE:
+            self.domain_cache.popitem(last=False)
 
     def generate_domains(self):
         for domain in self.domains:
@@ -123,11 +199,11 @@ class CollTask(QThread):
 
         try:
             raw_cache = json.load(open(path, "r", encoding="utf-8"))
-            self.dns_cache = {}
+            self.dns_cache = OrderedDict()
             for key, value in raw_cache.items():
                 clean_key = key.split(":")[0]
                 if clean_key not in self.dns_cache or not self.dns_cache[clean_key]:
-                    self.dns_cache[clean_key] = value
+                    self._set_dns_cache(clean_key, value)
         except Exception:
             pass
 
@@ -149,31 +225,38 @@ class CollTask(QThread):
     async def resolve_dns(self, host):
         clean_host = host.split(":")[0]
         if clean_host in self.dns_cache:
+            self.dns_cache.move_to_end(clean_host)
             return self.dns_cache[clean_host]
 
-        if clean_host not in self._dns_locks:
-            self._dns_locks[clean_host] = asyncio.Lock()
+        dns_lock = self._dns_locks.get(clean_host)
+        if dns_lock is None:
+            dns_lock = asyncio.Lock()
+            self._dns_locks[clean_host] = dns_lock
 
-        async with self._dns_locks[clean_host]:
-            if clean_host in self.dns_cache:
+        try:
+            async with dns_lock:
+                if clean_host in self.dns_cache:
+                    self.dns_cache.move_to_end(clean_host)
+                    return self.dns_cache[clean_host]
+
+                if re.match(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$", clean_host):
+                    self._set_dns_cache(clean_host, [clean_host])
+                    return [clean_host]
+
+                loop = asyncio.get_running_loop()
+                try:
+                    _, _, ips = await loop.run_in_executor(
+                        self.dns_executor,
+                        socket.gethostbyname_ex,
+                        clean_host,
+                    )
+                    self._set_dns_cache(clean_host, ips)
+                except Exception:
+                    self._set_dns_cache(clean_host, [])
+
                 return self.dns_cache[clean_host]
-
-            if re.match(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$", clean_host):
-                self.dns_cache[clean_host] = [clean_host]
-                return [clean_host]
-
-            loop = asyncio.get_running_loop()
-            try:
-                _, _, ips = await loop.run_in_executor(
-                    self.dns_executor,
-                    socket.gethostbyname_ex,
-                    clean_host,
-                )
-                self.dns_cache[clean_host] = ips
-            except Exception:
-                self.dns_cache[clean_host] = []
-
-            return self.dns_cache[clean_host]
+        finally:
+            self._dns_locks.pop(clean_host, None)
 
     def _record_failure(self, url, host, exc):
         reason = type(exc).__name__
@@ -239,29 +322,41 @@ class CollTask(QThread):
 
             cache_key = f"{scheme}://{host}"
             if cache_key not in self.domain_cache:
-                if cache_key not in self._dom_locks:
-                    self._dom_locks[cache_key] = asyncio.Lock()
+                dom_lock = self._dom_locks.get(cache_key)
+                if dom_lock is None:
+                    dom_lock = asyncio.Lock()
+                    self._dom_locks[cache_key] = dom_lock
 
-                async with self._dom_locks[cache_key]:
-                    if cache_key not in self.domain_cache:
-                        if not dns_resolved:
-                            self.domain_cache[cache_key] = (0, 0, "DEAD_DOMAIN")
-                        else:
-                            try:
-                                async with session.get(
-                                    cache_key,
-                                    timeout=5,
-                                    ssl=False,
-                                    allow_redirects=False,
-                                ) as response_domain:
-                                    domain_text = await response_domain.text()
-                                    self.domain_cache[cache_key] = (
-                                        response_domain.status,
-                                        len(domain_text),
-                                        extract_title(domain_text),
-                                    )
-                            except Exception:
-                                self.domain_cache[cache_key] = (0, 0, "HTTP_FAILED")
+                try:
+                    async with dom_lock:
+                        if cache_key not in self.domain_cache:
+                            if not dns_resolved:
+                                self._set_domain_cache(cache_key, (0, 0, "DEAD_DOMAIN"))
+                            else:
+                                try:
+                                    async with session.get(
+                                        cache_key,
+                                        timeout=5,
+                                        ssl=False,
+                                        allow_redirects=False,
+                                    ) as response_domain:
+                                        domain_text = await response_domain.text()
+                                        self._set_domain_cache(
+                                            cache_key,
+                                            (
+                                                response_domain.status,
+                                                len(domain_text),
+                                                extract_title(domain_text),
+                                            ),
+                                        )
+                                except Exception:
+                                    self._set_domain_cache(cache_key, (0, 0, "HTTP_FAILED"))
+                            if cache_key in self.domain_cache:
+                                self.domain_cache.move_to_end(cache_key)
+                finally:
+                    self._dom_locks.pop(cache_key, None)
+            else:
+                self.domain_cache.move_to_end(cache_key)
 
             dc, dl, dt = self.domain_cache[cache_key]
 
@@ -344,8 +439,7 @@ class CollTask(QThread):
                 )
 
     def run(self):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        loop = self._create_event_loop()
         loop._completed_tasks_for_ui = len(self.scanned_set)
 
         dict_lines = 0
@@ -397,9 +491,16 @@ class CollTask(QThread):
             dom_variants += dict_lines * prefix_count * suffix_count
 
         self.stats["total"] = len(self.ips) * url_variants_per_ip * dom_variants
+        if self.concurrency != self.original_concurrency:
+            self.log_sig.emit(
+                "INFO",
+                f"为保证稳定性，并发已从 {self.original_concurrency} 自动调整为 {self.concurrency}。",
+            )
         self.log_sig.emit(
             "INFO",
-            f"智能引擎启动，评估变体池共 {self.stats['total']} 个，已过滤 {len(self.scanned_set)} 个历史任务。",
+            f"智能引擎启动，评估变体池共 {self.stats['total']} 个，已过滤 {len(self.scanned_set)} 个历史任务。"
+            f" loop={type(loop).__name__} dns_workers={self._compute_dns_workers()}"
+            f" dict={'on' if self.dynamic_dict_enabled else 'off'} size={self.dict_size_mb:.2f}MB",
         )
 
         async def worker(queue, session):
@@ -409,9 +510,9 @@ class CollTask(QThread):
                     if task_data is None:
                         queue.task_done()
                         break
-                    url, host = task_data
+                    url, host, task_key = task_data
                     await self.fetch(session, url, host)
-                    self.task_done_sig.emit(f"{url}|{host}")
+                    self.task_done_sig.emit(task_key)
                     queue.task_done()
                     loop._completed_tasks_for_ui += 1
                     if (
@@ -430,19 +531,33 @@ class CollTask(QThread):
                     pass
 
         async def run_all():
+            timeout = aiohttp.ClientTimeout(total=8, connect=4, sock_connect=4, sock_read=4)
             connector = aiohttp.TCPConnector(
                 limit=self.concurrency,
+                limit_per_host=max(4, min(12, self.concurrency // 6)),
                 ssl=False,
                 force_close=True,
+                enable_cleanup_closed=True,
             )
-            async with aiohttp.ClientSession(connector=connector) as session:
-                queue = asyncio.Queue(maxsize=self.concurrency * 2)
+            async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
+                queue = asyncio.Queue(maxsize=max(self.concurrency * 2, 64))
                 workers = [
                     asyncio.create_task(worker(queue, session))
                     for _ in range(self.concurrency)
                 ]
 
                 async def producer():
+                    recent_task_keys = OrderedDict()
+
+                    def remember_task(task_key):
+                        if task_key in recent_task_keys:
+                            recent_task_keys.move_to_end(task_key)
+                            return False
+                        recent_task_keys[task_key] = None
+                        if len(recent_task_keys) > max(20000, self.concurrency * 100):
+                            recent_task_keys.popitem(last=False)
+                        return True
+
                     for raw_ip in self.ips:
                         if self._stop_flag:
                             break
@@ -473,18 +588,26 @@ class CollTask(QThread):
                                 if self._stop_flag:
                                     return
 
-                                task_id = f"{url_variant}|{domain}"
-                                if task_id in self.scanned_set:
+                                task_key = task_fingerprint(f"{url_variant}|{domain}")
+                                if task_key in self.scanned_set or not remember_task(task_key):
                                     continue
 
-                                await queue.put((url_variant, domain))
+                                await queue.put((url_variant, domain, task_key))
 
                                 parts = url_variant.split(":")
                                 if len(parts) == 3:
                                     variant_port = parts[-1]
-                                    task_id_with_port = f"{url_variant}|{domain}:{variant_port}"
-                                    if task_id_with_port not in self.scanned_set:
-                                        await queue.put((url_variant, f"{domain}:{variant_port}"))
+                                    domain_with_port = f"{domain}:{variant_port}"
+                                    task_key_with_port = task_fingerprint(
+                                        f"{url_variant}|{domain_with_port}"
+                                    )
+                                    if (
+                                        task_key_with_port not in self.scanned_set
+                                        and remember_task(task_key_with_port)
+                                    ):
+                                        await queue.put(
+                                            (url_variant, domain_with_port, task_key_with_port)
+                                        )
 
                     for _ in range(self.concurrency):
                         await queue.put(None)
@@ -511,7 +634,16 @@ class CollTask(QThread):
             self._save_failure_samples()
             self.summary_sig.emit(self.stats, self._stop_flag)
         except Exception as exc:
+            write_global_log("FATAL", f"对撞引擎崩溃堆栈:\n{traceback.format_exc()}")
             self.log_sig.emit("ERROR", f"对撞引擎异常: {exc}")
+            self.stats["top_fail_reasons"] = dict(
+                sorted(
+                    self.fail_reason_counts.items(),
+                    key=lambda item: (-item[1], item[0]),
+                )[:5]
+            )
+            self._save_failure_samples()
+            self.summary_sig.emit(self.stats, True)
         finally:
             self._save_dns_cache()
             self.dns_executor.shutdown(wait=False, cancel_futures=True)

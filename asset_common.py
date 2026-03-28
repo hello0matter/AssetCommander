@@ -1,8 +1,12 @@
 import asyncio
+import faulthandler
+import hashlib
 import json
 import os
 import re
 import sys
+import threading
+import traceback
 from datetime import datetime
 
 
@@ -13,6 +17,7 @@ RE_DOM = r"(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}"
 CONFIG_FILE = "config.json"
 WORKSPACE_DIR = "workspace"
 GLOBAL_LOG_FILE = "AssetCommander.log"
+CRASH_DUMP_FILE = "AssetCommander-crash.log"
 RESULT_FIELDS = ["url", "host", "code", "len", "title", "conf", "remark"]
 LOW_RISK_UI_LIMIT = 800
 SCAN_PROGRESS_FILE = "scan_progress.json"
@@ -27,6 +32,8 @@ PROJECT_COPY_FILES = [
     "fission.json",
     "reverse_ip.json",
 ]
+_TASK_FINGERPRINT_RE = re.compile(r"^[0-9a-f]{32}$")
+_CRASH_DUMP_HANDLE = None
 
 
 def _patch_windows_proactor_reset_noise():
@@ -112,6 +119,66 @@ def write_global_log(level, msg):
         pass
 
 
+def task_fingerprint(value):
+    raw = str(value or "").strip().lower()
+    if not raw:
+        return ""
+    return hashlib.blake2b(
+        raw.encode("utf-8", errors="ignore"),
+        digest_size=16,
+    ).hexdigest()
+
+
+def normalize_task_record(value):
+    raw = str(value or "").strip().lower()
+    if not raw:
+        return ""
+    if _TASK_FINGERPRINT_RE.fullmatch(raw):
+        return raw
+    return task_fingerprint(raw)
+
+
+def install_global_crash_handlers():
+    global _CRASH_DUMP_HANDLE
+
+    if getattr(install_global_crash_handlers, "_installed", False):
+        return
+
+    def _handle_unhandled_exception(exc_type, exc_value, exc_traceback):
+        if issubclass(exc_type, KeyboardInterrupt):
+            return sys.__excepthook__(exc_type, exc_value, exc_traceback)
+
+        formatted = "".join(
+            traceback.format_exception(exc_type, exc_value, exc_traceback)
+        ).rstrip()
+        write_global_log("FATAL", f"未捕获异常:\n{formatted}")
+
+        try:
+            sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        except Exception:
+            pass
+
+    sys.excepthook = _handle_unhandled_exception
+
+    if hasattr(threading, "excepthook"):
+        def _thread_excepthook(args):
+            _handle_unhandled_exception(
+                args.exc_type,
+                args.exc_value,
+                args.exc_traceback,
+            )
+
+        threading.excepthook = _thread_excepthook
+
+    try:
+        _CRASH_DUMP_HANDLE = open(CRASH_DUMP_FILE, "a", encoding="utf-8", buffering=1)
+        faulthandler.enable(_CRASH_DUMP_HANDLE, all_threads=True)
+    except Exception:
+        pass
+
+    install_global_crash_handlers._installed = True
+
+
 def get_base_config():
     default = {
         "fscan_cmd": "fscan.exe -h {target} -p 80,443,8080,8443 -m web -np -t 100",
@@ -149,11 +216,14 @@ def extract_title(html_text):
 
 
 __all__ = [
+    "CRASH_DUMP_FILE",
     "CONFIG_FILE",
     "FAIL_SAMPLE_FILE",
     "GLOBAL_LOG_FILE",
     "HTTP_STATUS",
+    "install_global_crash_handlers",
     "LOW_RISK_UI_LIMIT",
+    "normalize_task_record",
     "PROJECT_COPY_FILES",
     "RE_AST",
     "RE_DOM",
@@ -163,5 +233,6 @@ __all__ = [
     "WORKSPACE_DIR",
     "extract_title",
     "get_base_config",
+    "task_fingerprint",
     "write_global_log",
 ]

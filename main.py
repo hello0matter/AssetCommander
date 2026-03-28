@@ -19,6 +19,8 @@ from asset_common import (
     SCAN_PROGRESS_FILE,
     WORKSPACE_DIR,
     get_base_config,
+    install_global_crash_handlers,
+    normalize_task_record,
     write_global_log,
 )
 from asset_dialogs import (
@@ -50,6 +52,7 @@ CONFIDENCE_SORT_WEIGHT = {
     "中危": 2,
     "低危": 3,
 }
+MEDIUM_RISK_UI_LIMIT = 4000
 
 MOJIBAKE_CONFIDENCE_MAP = {
     "6942樺嵄": "高危",
@@ -133,6 +136,10 @@ class AssetCommander(QMainWindow):
         self.csv_buffer = []
         self.scanned_buffer = []
         self.scanned_set = set()
+        self.scanned_count = 0
+        self._pending_scanned_keys = set()
+        self.ui_conf_counts = {"极危": 0, "高危": 0, "中危": 0, "低危": 0}
+        self._risk_cap_notified = set()
         self.csv_timer = QTimer(self)
         self.csv_timer.timeout.connect(self.flush_csv_buffer)
         self.csv_timer.start(2000)
@@ -609,11 +616,39 @@ class AssetCommander(QMainWindow):
             self.log("ERROR", f"读取扫描进度失败: {e}")
             return {}
 
+    def _load_scanned_index(self, proj_dir=None, quiet=False):
+        proj_dir = proj_dir or self.proj
+        self.scanned_set = set()
+        self.scanned_count = 0
+        self._pending_scanned_keys.clear()
+        if not proj_dir:
+            return
+
+        scanned_path = os.path.join(proj_dir, "scanned.log")
+        if not os.path.exists(scanned_path):
+            return
+
+        try:
+            loaded = set()
+            with open(scanned_path, 'r', encoding='utf-8', errors='ignore') as f:
+                for line in f:
+                    task_key = normalize_task_record(line)
+                    if task_key:
+                        loaded.add(task_key)
+            self.scanned_set = loaded
+            self.scanned_count = len(loaded)
+        except Exception as e:
+            self.scanned_set = set()
+            self.scanned_count = 0
+            self._pending_scanned_keys.clear()
+            if not quiet:
+                self.log("ERROR", f"读取 scanned.log 失败: {e}")
+
     def _write_progress_state(self, current=None, total=None, active=None, stats=None):
         if not self.proj:
             return
 
-        scanned_current = len(self.scanned_set)
+        scanned_current = self.scanned_count
         try:
             write_progress_state(
                 self.proj,
@@ -659,8 +694,8 @@ class AssetCommander(QMainWindow):
         self.flush_log_buffer()
         self.flush_csv_buffer()
         self._write_progress_state(
-            current=len(self.scanned_set),
-            total=max(self.pg_bar.maximum(), len(self.scanned_set), 1),
+            current=self.scanned_count,
+            total=max(self.pg_bar.maximum(), self.scanned_count, 1),
             active=bool(hasattr(self, 'cth') and self.cth.isRunning()),
         )
 
@@ -699,8 +734,10 @@ class AssetCommander(QMainWindow):
         self.ips.clear()
         self.doms.clear()
         self.scanned_set.clear()
+        self.scanned_count = 0
         self.csv_buffer.clear()
         self.scanned_buffer.clear()
+        self._pending_scanned_keys.clear()
 
         self.i_pl.blockSignals(True)
         self.d_pl.blockSignals(True)
@@ -718,6 +755,8 @@ class AssetCommander(QMainWindow):
         self.lbl_p.setText("当前工程: [未载入]")
         self.lbl_p.setToolTip("")
         self.last_scan_stats = {}
+        self.ui_conf_counts = {"极危": 0, "高危": 0, "中危": 0, "低危": 0}
+        self._risk_cap_notified.clear()
         self._table_sort_active = False
         self._table_sort_column = -1
         self._update_artifact_buttons()
@@ -744,8 +783,12 @@ class AssetCommander(QMainWindow):
         self.ips.clear()
         self.doms.clear()
         self.scanned_set.clear()
+        self.scanned_count = 0
         self.csv_buffer.clear()
         self.scanned_buffer.clear()
+        self._pending_scanned_keys.clear()
+        self.ui_conf_counts = {"极危": 0, "高危": 0, "中危": 0, "低危": 0}
+        self._risk_cap_notified.clear()
 
         self.i_pl.blockSignals(True)
         self.d_pl.blockSignals(True)
@@ -811,17 +854,11 @@ class AssetCommander(QMainWindow):
         self.tb.setUpdatesEnabled(True)
         self.apply_table_sort()
 
-        scanned_path = os.path.join(proj_dir, "scanned.log")
-        if os.path.exists(scanned_path):
-            try:
-                with open(scanned_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    self.scanned_set = set(line.strip() for line in f if line.strip())
-            except Exception as e:
-                self.log("ERROR", f"读取 scanned.log 失败: {e}")
+        self._load_scanned_index(proj_dir)
 
         progress_state = self._read_progress_state(proj_dir)
         self.last_scan_stats = progress_state.get("stats", {}) if isinstance(progress_state.get("stats"), dict) else {}
-        current_progress = len(self.scanned_set)
+        current_progress = self.scanned_count
         total_progress = max(int(progress_state.get("total", 0) or 0), current_progress, 1)
         self.pg_bar.setMaximum(total_progress)
         self.pg_bar.setValue(current_progress)
@@ -829,17 +866,22 @@ class AssetCommander(QMainWindow):
         if current_progress:
             self.log("INFO", f"已恢复扫描进度: {current_progress} / {total_progress}")
         self._update_artifact_buttons()
-        self.log("SUCCESS", f"工程载入成功，IP:{len(self.ips)}，Host:{len(self.doms)}，已扫描:{len(self.scanned_set)}")
+        self.log("SUCCESS", f"工程载入成功，IP:{len(self.ips)}，Host:{len(self.doms)}，已扫描:{self.scanned_count}")
 
     @Slot(str)
     def mark_task_done(self, task_id):
-        if not task_id or task_id in self.scanned_set:
+        task_key = normalize_task_record(task_id)
+        if not task_key:
             return
 
-        self.scanned_set.add(task_id)
-        self.scanned_buffer.append(task_id)
+        if task_key in self.scanned_set or task_key in self._pending_scanned_keys:
+            return
 
-        current = len(self.scanned_set)
+        self._pending_scanned_keys.add(task_key)
+        self.scanned_buffer.append(task_key)
+        self.scanned_count += 1
+
+        current = self.scanned_count
         total = max(self.pg_bar.maximum(), current, 1)
         if self.pg_bar.maximum() != total:
             self.pg_bar.setMaximum(total)
@@ -865,6 +907,8 @@ class AssetCommander(QMainWindow):
         if not ip_list or not domain_list:
             return self.log("ERROR", "IP 池或域名池为空。")
 
+        self._load_scanned_index(self.proj, quiet=True)
+
         dict_config = {}
         dict_path = os.path.join(self.proj, "dict_config.json")
         if os.path.exists(dict_path):
@@ -881,7 +925,7 @@ class AssetCommander(QMainWindow):
         self.btn_stop.setText("停止")
 
         progress_state = self._read_progress_state()
-        current_progress = len(self.scanned_set)
+        current_progress = self.scanned_count
         total_hint = max(int(progress_state.get("total", 0) or 0), current_progress, 1)
         self.pg_bar.setMaximum(total_hint)
         self.pg_bar.setValue(current_progress)
@@ -907,7 +951,7 @@ class AssetCommander(QMainWindow):
             policies,
             self.spin_threads.value(),
             self.proj,
-            self.scanned_set,
+            set(self.scanned_set),
             dict_config,
         )
         self.cth.log_sig.connect(self.log)
@@ -921,7 +965,7 @@ class AssetCommander(QMainWindow):
     def show_summary(self, stats, was_stopped):
         stats = stats or {}
         self.last_scan_stats = dict(stats)
-        current_progress = len(self.scanned_set)
+        current_progress = self.scanned_count
         total_progress = max(int(stats.get('total', 0) or 0), self.pg_bar.maximum(), current_progress, 1)
 
         self._write_progress_state(
@@ -1085,12 +1129,13 @@ class AssetCommander(QMainWindow):
             try:
                 append_lines(scanned_path, task_ids)
                 self.scanned_buffer.clear()
+                self._pending_scanned_keys.difference_update(task_ids)
             except Exception as e:
                 self.log("ERROR", f"断点日志写入失败: {e}")
 
         self._write_progress_state(
-            current=len(self.scanned_set),
-            total=max(self.pg_bar.maximum(), len(self.scanned_set), 1),
+            current=self.scanned_count,
+            total=max(self.pg_bar.maximum(), self.scanned_count, 1),
             active=bool(hasattr(self, 'cth') and self.cth.isRunning()),
         )
 
@@ -1103,7 +1148,15 @@ class AssetCommander(QMainWindow):
 
         conf = str(row_data.get("conf", ""))
         is_low_risk = "低危" in conf
-        if is_low_risk and self.tb.rowCount() >= LOW_RISK_UI_LIMIT:
+        if is_low_risk and self.ui_conf_counts["低危"] >= LOW_RISK_UI_LIMIT:
+            if "低危" not in self._risk_cap_notified:
+                self._risk_cap_notified.add("低危")
+                self.log("INFO", f"低危结果已达到 UI 展示上限 {LOW_RISK_UI_LIMIT}，后续仅写入 CSV。")
+            return
+        if "中危" in conf and self.ui_conf_counts["中危"] >= MEDIUM_RISK_UI_LIMIT:
+            if "中危" not in self._risk_cap_notified:
+                self._risk_cap_notified.add("中危")
+                self.log("INFO", f"中危结果已达到 UI 展示上限 {MEDIUM_RISK_UI_LIMIT}，后续仅写入 CSV。")
             return
 
         should_resort = bool(getattr(self, "_table_sort_active", False))
@@ -1145,6 +1198,9 @@ class AssetCommander(QMainWindow):
 
             self.tb.setItem(row_index, col_index, item)
 
+        if conf in self.ui_conf_counts:
+            self.ui_conf_counts[conf] += 1
+
         if should_resort:
             self.apply_table_sort()
             self.tb.setUpdatesEnabled(True)
@@ -1160,6 +1216,7 @@ class AssetCommander(QMainWindow):
 if __name__ == "__main__":
     if sys.platform == 'win32':
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+    install_global_crash_handlers()
     app = QApplication(sys.argv)
     win = AssetCommander()
     win.show()
