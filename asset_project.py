@@ -3,6 +3,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 from datetime import datetime
 
 
@@ -78,9 +79,35 @@ def read_progress_state(project_dir, progress_file):
     if not path or not os.path.exists(path):
         return {}
 
-    with open(path, "r", encoding="utf-8") as handle:
-        data = json.load(handle)
-    return data if isinstance(data, dict) else {}
+    try:
+        if os.path.getsize(path) <= 0:
+            return {}
+    except OSError:
+        return {}
+
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            data = json.load(handle)
+        return data if isinstance(data, dict) else {}
+    except (json.JSONDecodeError, OSError, ValueError):
+        return {}
+
+
+def atomic_json_dump(path, payload):
+    directory = os.path.dirname(path) or "."
+    fd, tmp_path = tempfile.mkstemp(prefix=".tmp-progress-", suffix=".json", dir=directory)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            json.dump(payload, handle, ensure_ascii=False, indent=2)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(tmp_path, path)
+    finally:
+        if os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
 
 
 def write_progress_state(
@@ -124,8 +151,7 @@ def write_progress_state(
 
     state["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     path = progress_state_path(project_dir, progress_file)
-    with open(path, "w", encoding="utf-8") as handle:
-        json.dump(state, handle, ensure_ascii=False, indent=2)
+    atomic_json_dump(path, state)
     return state
 
 

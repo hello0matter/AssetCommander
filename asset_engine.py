@@ -150,6 +150,15 @@ class CollTask(QThread):
         while len(self.domain_cache) > MAX_DOMAIN_CACHE_SIZE:
             self.domain_cache.popitem(last=False)
 
+    def _normalize_redirect(self, location):
+        raw = str(location or "").strip()
+        if not raw:
+            return ""
+        return raw.rstrip("/").lower()
+
+    def _same_redirect(self, left, right):
+        return self._normalize_redirect(left) == self._normalize_redirect(right)
+
     def generate_domains(self):
         for domain in self.domains:
             yield domain
@@ -319,6 +328,7 @@ class CollTask(QThread):
                 bc = response_base.status
                 bl = len(base_text)
                 bt = extract_title(base_text)
+                br = response_base.headers.get("Location", "")
 
             cache_key = f"{scheme}://{host}"
             if cache_key not in self.domain_cache:
@@ -331,7 +341,7 @@ class CollTask(QThread):
                     async with dom_lock:
                         if cache_key not in self.domain_cache:
                             if not dns_resolved:
-                                self._set_domain_cache(cache_key, (0, 0, "DEAD_DOMAIN"))
+                                self._set_domain_cache(cache_key, (0, 0, "DEAD_DOMAIN", ""))
                             else:
                                 try:
                                     async with session.get(
@@ -347,10 +357,11 @@ class CollTask(QThread):
                                                 response_domain.status,
                                                 len(domain_text),
                                                 extract_title(domain_text),
+                                                response_domain.headers.get("Location", ""),
                                             ),
                                         )
                                 except Exception:
-                                    self._set_domain_cache(cache_key, (0, 0, "HTTP_FAILED"))
+                                    self._set_domain_cache(cache_key, (0, 0, "HTTP_FAILED", ""))
                             if cache_key in self.domain_cache:
                                 self.domain_cache.move_to_end(cache_key)
                 finally:
@@ -358,7 +369,7 @@ class CollTask(QThread):
             else:
                 self.domain_cache.move_to_end(cache_key)
 
-            dc, dl, dt = self.domain_cache[cache_key]
+            dc, dl, dt, dr = self.domain_cache[cache_key]
 
             headers = {"Host": host}
             if self.policies.get("waf", False):
@@ -394,18 +405,22 @@ class CollTask(QThread):
                 hc = response_host.status
                 hl = len(host_text)
                 ht = extract_title(host_text)
+                hr = response_host.headers.get("Location", "")
 
             target_ip = url.split("://")[1].split(":")[0].split("/")[0]
             confidence, remark = self.evaluate_hit(
                 bc,
                 bl,
                 bt,
+                br,
                 hc,
                 hl,
                 ht,
+                hr,
                 dc,
                 dl,
                 dt,
+                dr,
                 dns_resolved,
                 target_ip,
                 resolved_ips,
@@ -425,7 +440,7 @@ class CollTask(QThread):
                 )
                 self.stats["success"] += 1
 
-                if "危" in confidence and "低危" not in confidence:
+                if confidence in {"极危", "高危"}:
                     self.log_sig.emit("SUCCESS", f"{confidence}! {url} -> Host:{host} [{remark}]")
         except asyncio.CancelledError:
             pass
@@ -658,12 +673,15 @@ class CollTask(QThread):
         bc,
         bl,
         bt,
+        br,
         hc,
         hl,
         ht,
+        hr,
         dc,
         dl,
         dt,
+        dr,
         dns_resolved,
         target_ip=None,
         resolved_ips=None,
@@ -674,6 +692,9 @@ class CollTask(QThread):
         ht = ht or "N/A"
         bt = bt or "N/A"
         dt = dt or "N/A"
+        hr = hr or ""
+        br = br or ""
+        dr = dr or ""
         ht_lower = ht.lower()
         is_ht_garbage = any(item in ht_lower for item in self.garbage_titles)
         juicy_keywords = [
@@ -699,9 +720,35 @@ class CollTask(QThread):
         bc_desc = f"{bc} {HTTP_STATUS.get(bc, '未知')}"
         hc_desc = f"{hc} {HTTP_STATUS.get(hc, '未知')}"
         dc_desc = f"{dc} {HTTP_STATUS.get(dc, '未知')}" if dc else "0 未知"
+        host_redirect = self._normalize_redirect(hr)
+        base_redirect = self._normalize_redirect(br)
+        domain_redirect = self._normalize_redirect(dr)
 
         if target_ip and target_ip in resolved_ips:
             return "低危", "域名公网解析已经包含当前 IP"
+
+        same_domain = (
+            hc == dc
+            and ht == dt
+            and abs(hl - dl) < 500
+            and self._same_redirect(host_redirect, domain_redirect)
+        )
+        same_ip = (
+            hc == bc
+            and ht == bt
+            and abs(hl - bl) < 500
+            and self._same_redirect(host_redirect, base_redirect)
+        )
+
+        if same_domain:
+            if hc in [301, 302]:
+                return "DROP", ""
+            return "低危", f"Host 碰撞与域名直连一致 [{hc_desc}]"
+
+        if same_ip:
+            if hc in [301, 302]:
+                return "DROP", ""
+            return "低危", f"Host 碰撞与 IP 默认站一致 [{hc_desc}]"
 
         if dc == 0 and hc == 200:
             if not dns_resolved:
@@ -719,8 +766,15 @@ class CollTask(QThread):
             return "高危", f"IP 直连 [{bc_desc}]，Host 碰撞 [{hc_desc}] [{ht}]"
 
         if hc in [301, 302]:
+            if host_redirect and (
+                self._same_redirect(host_redirect, domain_redirect)
+                or self._same_redirect(host_redirect, base_redirect)
+            ):
+                return "DROP", ""
+            if not host_redirect:
+                return "DROP", ""
             level = "高危" if is_juicy else "中危"
-            return level, f"Host 碰撞发生跳转 [{hc_desc}] [{ht}]"
+            return level, f"Host 碰撞发生差异跳转 [{hc_desc}] -> {hr or 'N/A'}"
 
         if hc in [401, 405, 500] and bc in [404, 403, 400]:
             return "中危", f"IP 直连 [{bc_desc}]，Host 碰撞 [{hc_desc}]"
@@ -740,15 +794,6 @@ class CollTask(QThread):
             if hc in [200, 301, 302, 401, 403]:
                 return "低危", f"标题偏通用但存在有效响应 [{hc_desc}] [{ht}]"
             return "DROP", ""
-
-        same_domain = hc == dc and ht == dt and abs(hl - dl) < 500
-        same_ip = hc == bc and ht == bt and abs(hl - bl) < 500
-
-        if same_domain:
-            return "低危", f"Host 碰撞与域名直连一致 [{hc_desc}]"
-
-        if same_ip:
-            return "低危", f"Host 碰撞与 IP 默认站一致 [{hc_desc}]"
 
         if hc in [200, 301, 302, 401, 403, 405, 500]:
             return "低危", f"Host 碰撞存在有效响应 [{hc_desc}] [{ht}]"

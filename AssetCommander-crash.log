@@ -1,0 +1,309 @@
+Windows fatal exception: access violation
+
+Thread 0x0000674c (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x0000843c (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x000006e4 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x0000627c (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x00001548 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x00003d14 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x00000d04 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x000086b8 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x000026a0 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x0000755c (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x00004f58 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x00003d50 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x00000654 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x000049f4 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x00006d28 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x000020e4 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x00000978 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 58 in run
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 83 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x000030e0 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x00008aa4 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x00007cdc (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x00004dd4 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x00008794 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x00000870 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x000044c4 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x000070e8 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x00007878 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x00005cbc (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x000080d8 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x000075d4 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x000017a8 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x00007df8 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x00008a38 (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\concurrent\futures\thread.py", line 81 in _worker
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 975 in run
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 1038 in _bootstrap_inner
+  File "D:\Program Files\Python\Python311\Lib\threading.py", line 995 in _bootstrap
+
+Thread 0x00006aac (most recent call first):
+  File "D:\Program Files\Python\Python311\Lib\ssl.py", line 979 in do_handshake
+  File "D:\Program Files\Python\Python311\Lib\asyncio\sslproto.py", line 559 in _do_handshake
+  File "D:\Program Files\Python\Python311\Lib\asyncio\sslproto.py", line 546 in _start_handshake
+  File "D:\Program Files\Python\Python311\Lib\asyncio\sslproto.py", line 387 in connection_made
+  File "D:\Program Files\Python\Python311\Lib\asyncio\events.py", line 80 in _run
+  File "D:\Program Files\Python\Python311\Lib\asyncio\base_events.py", line 1909 in _run_once
+  File "D:\Program Files\Python\Python311\Lib\asyncio\base_events.py", line 604 in run_forever
+  File "D:\Program Files\Python\Python311\Lib\asyncio\windows_events.py", line 321 in run_forever
+  File "D:\Program Files\Python\Python311\Lib\asyncio\base_events.py", line 637 in run_until_complete
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\asset_engine.py", line 642 in run
+
+Current thread 0x00006040 (most recent call first):
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  File "D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\main.py", line 122 in __lt__
+  ...

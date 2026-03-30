@@ -52,7 +52,9 @@ CONFIDENCE_SORT_WEIGHT = {
     "中危": 2,
     "低危": 3,
 }
-MEDIUM_RISK_UI_LIMIT = 4000
+LOW_RISK_UI_RENDER_LIMIT = 80
+MEDIUM_RISK_UI_LIMIT = 300
+TOTAL_UI_SOFT_LIMIT = 1200
 
 MOJIBAKE_CONFIDENCE_MAP = {
     "6942樺嵄": "高危",
@@ -1147,13 +1149,32 @@ class AssetCommander(QMainWindow):
                 self.flush_csv_buffer()
 
         conf = str(row_data.get("conf", ""))
+        remark = str(row_data.get("remark", ""))
         is_low_risk = "低危" in conf
-        if is_low_risk and self.ui_conf_counts["低危"] >= LOW_RISK_UI_LIMIT:
+        is_medium_risk = "中危" in conf
+        is_high_priority = "极危" in conf or "高危" in conf
+        if (
+            "域名公网解析已经包含当前 IP" in remark
+            and (is_low_risk or is_medium_risk)
+        ):
+            if "公网解析已覆盖" not in self._risk_cap_notified:
+                self._risk_cap_notified.add("公网解析已覆盖")
+                self.log("INFO", "域名公网解析已包含当前 IP 的中低危结果将不再显示到表格，仅保留 CSV。")
+            return
+        if (
+            self.tb.rowCount() >= TOTAL_UI_SOFT_LIMIT
+            and not is_high_priority
+        ):
+            if "总量" not in self._risk_cap_notified:
+                self._risk_cap_notified.add("总量")
+                self.log("INFO", f"结果表格已达到 UI 软上限 {TOTAL_UI_SOFT_LIMIT}，后续中低危仅写入 CSV。")
+            return
+        if is_low_risk and self.ui_conf_counts["低危"] >= LOW_RISK_UI_RENDER_LIMIT:
             if "低危" not in self._risk_cap_notified:
                 self._risk_cap_notified.add("低危")
-                self.log("INFO", f"低危结果已达到 UI 展示上限 {LOW_RISK_UI_LIMIT}，后续仅写入 CSV。")
+                self.log("INFO", f"低危结果已达到 UI 展示上限 {LOW_RISK_UI_RENDER_LIMIT}，后续仅写入 CSV。")
             return
-        if "中危" in conf and self.ui_conf_counts["中危"] >= MEDIUM_RISK_UI_LIMIT:
+        if is_medium_risk and self.ui_conf_counts["中危"] >= MEDIUM_RISK_UI_LIMIT:
             if "中危" not in self._risk_cap_notified:
                 self._risk_cap_notified.add("中危")
                 self.log("INFO", f"中危结果已达到 UI 展示上限 {MEDIUM_RISK_UI_LIMIT}，后续仅写入 CSV。")
