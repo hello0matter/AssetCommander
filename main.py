@@ -1,4 +1,5 @@
 ﻿import sys, os, re, asyncio, subprocess, json, socket, ipaddress, csv
+import hashlib
 from datetime import datetime
 from PySide6.QtCore import Qt, Slot, QTimer
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
@@ -31,6 +32,7 @@ from asset_dialogs import (
     SubdomainDictDialog,
 )
 from asset_engine import CollTask
+from asset_tasks import ToolTask
 from asset_project import (
     append_csv_rows,
     append_lines,
@@ -140,6 +142,7 @@ class AssetCommander(QMainWindow):
         self.scanned_set = set()
         self.scanned_count = 0
         self._pending_scanned_keys = set()
+        self.scan_signature = ""
         self.ui_conf_counts = {"极危": 0, "高危": 0, "中危": 0, "低危": 0}
         self._risk_cap_notified = set()
         self.csv_timer = QTimer(self)
@@ -552,8 +555,24 @@ class AssetCommander(QMainWindow):
     def run_o(self):
         if not self.proj: return QMessageBox.warning(self, "提示", "请先选择工程")
         if hasattr(self, 'th') and self.th.isRunning(): return self.log("ERROR", "外部工具仍在运行，请等待结束。")
-        
-        cmd = self.config.get("oneforall_cmd", "").replace("{target}", self.t_ed.text().strip())
+
+        target = (
+            self.t_ed.text()
+            .strip()
+            .replace("http://", "")
+            .replace("https://", "")
+            .split("/")[0]
+            .split(":")[0]
+            .strip()
+        )
+        if not target:
+            return self.log("ERROR", "OFA 目标为空。")
+
+        cmd_tpl = self.config.get("oneforall_cmd", "").strip()
+        if not cmd_tpl:
+            return self.log("ERROR", "未配置 OneForAll 命令。")
+
+        cmd = cmd_tpl.replace("{target}", target)
         self.th = ToolTask("OFA", cmd); self.th.log_sig.connect(self.log); self.th.ast_sig.connect(self.cln); self.th.start()
 
     def stop_c(self):
@@ -618,7 +637,131 @@ class AssetCommander(QMainWindow):
             self.log("ERROR", f"读取扫描进度失败: {e}")
             return {}
 
-    def _load_scanned_index(self, proj_dir=None, quiet=False):
+    def _load_dict_config(self, proj_dir=None, quiet=True):
+        proj_dir = proj_dir or self.proj
+        if not proj_dir:
+            return {}
+
+        path = os.path.join(proj_dir, "dict_config.json")
+        if not os.path.exists(path):
+            return {}
+
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                return json.load(f) or {}
+        except Exception as e:
+            if not quiet:
+                self.log("ERROR", f"读取字典配置失败: {e}")
+            return {}
+
+    def _build_scan_signature(self, ip_list, domain_list, policies, dict_config):
+        dict_config = dict(dict_config or {})
+        dict_path = os.path.abspath(dict_config.get("path", "")) if dict_config.get("path") else ""
+        dict_meta = {"path": dict_path}
+        if dict_path and os.path.exists(dict_path):
+            try:
+                dict_meta["size"] = os.path.getsize(dict_path)
+                dict_meta["mtime"] = int(os.path.getmtime(dict_path))
+            except OSError:
+                pass
+
+        payload = {
+            "ips": sorted(dict.fromkeys(str(item).strip() for item in ip_list if str(item).strip())),
+            "domains": sorted(dict.fromkeys(str(item).strip() for item in domain_list if str(item).strip())),
+            "policies": {key: bool(value) for key, value in sorted((policies or {}).items())},
+            "dict": {
+                "enabled": bool(dict_config.get("enabled")),
+                "prefixes": [item.strip() for item in str(dict_config.get("prefixes", "")).splitlines() if item.strip()],
+                "suffixes": [item.strip() for item in str(dict_config.get("suffixes", "")).splitlines() if item.strip()],
+                "meta": dict_meta,
+            },
+        }
+        raw = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        return hashlib.blake2b(raw.encode("utf-8"), digest_size=16).hexdigest()
+
+    def _estimate_scan_total(self, ip_list, domain_list, policies, dict_config):
+        url_variants_per_ip = 0
+        if policies.get("k", True):
+            url_variants_per_ip += 2
+        if policies.get("80", True):
+            url_variants_per_ip += 1
+        if policies.get("443", True):
+            url_variants_per_ip += 1
+        if policies.get("n", True):
+            url_variants_per_ip += 2
+        if url_variants_per_ip == 0:
+            url_variants_per_ip = 4
+
+        dom_variants = len(domain_list)
+        dict_path = str((dict_config or {}).get("path", "") or "").strip()
+        if (
+            dict_config
+            and dict_config.get("enabled")
+            and dict_path
+            and os.path.exists(dict_path)
+        ):
+            try:
+                with open(dict_path, "rb") as handle:
+                    dict_lines = sum(1 for _ in handle)
+            except OSError:
+                dict_lines = 0
+
+            prefix_count = max(
+                1,
+                len([item for item in str(dict_config.get("prefixes", "")).splitlines() if item.strip()]),
+            )
+            suffix_count = max(
+                1,
+                len([item for item in str(dict_config.get("suffixes", "")).splitlines() if item.strip()]),
+            )
+            dom_variants += dict_lines * prefix_count * suffix_count
+
+        return len(ip_list) * url_variants_per_ip * dom_variants
+
+    def _scanned_log_path(self, proj_dir=None, signature=None):
+        proj_dir = proj_dir or self.proj
+        if not proj_dir:
+            return ""
+        if signature:
+            return os.path.join(proj_dir, f"scanned.{signature[:8]}.log")
+        return os.path.join(proj_dir, "scanned.log")
+
+    def _migrate_legacy_scanned_log(self, proj_dir=None, signature=None):
+        proj_dir = proj_dir or self.proj
+        signature = signature or self.scan_signature
+        if not proj_dir or not signature:
+            return
+
+        legacy_path = self._scanned_log_path(proj_dir=proj_dir, signature=None)
+        signature_path = self._scanned_log_path(proj_dir=proj_dir, signature=signature)
+        if not os.path.exists(legacy_path) or os.path.exists(signature_path):
+            return
+
+        try:
+            os.replace(legacy_path, signature_path)
+        except OSError:
+            return
+
+    def _set_scan_config_enabled(self, enabled):
+        widgets = [
+            getattr(self, "t_ed", None),
+            getattr(self, "i_pl", None),
+            getattr(self, "d_pl", None),
+            getattr(self, "c_k", None),
+            getattr(self, "c_8", None),
+            getattr(self, "c_4", None),
+            getattr(self, "c_n", None),
+            getattr(self, "c_abs", None),
+            getattr(self, "c_waf", None),
+            getattr(self, "c_sni", None),
+            getattr(self, "spin_threads", None),
+            getattr(self, "btn_adv_dict", None),
+        ]
+        for widget in widgets:
+            if widget is not None:
+                widget.setEnabled(bool(enabled))
+
+    def _load_scanned_index(self, proj_dir=None, quiet=False, signature=None):
         proj_dir = proj_dir or self.proj
         self.scanned_set = set()
         self.scanned_count = 0
@@ -626,7 +769,7 @@ class AssetCommander(QMainWindow):
         if not proj_dir:
             return
 
-        scanned_path = os.path.join(proj_dir, "scanned.log")
+        scanned_path = self._scanned_log_path(proj_dir=proj_dir, signature=signature)
         if not os.path.exists(scanned_path):
             return
 
@@ -661,6 +804,7 @@ class AssetCommander(QMainWindow):
                 bar_total=self.pg_bar.maximum() if hasattr(self, 'pg_bar') else 0,
                 active=active,
                 stats=stats,
+                scan_signature=self.scan_signature,
             )
         except Exception as e:
             self.log("ERROR", f"保存扫描进度失败: {e}")
@@ -737,6 +881,7 @@ class AssetCommander(QMainWindow):
         self.doms.clear()
         self.scanned_set.clear()
         self.scanned_count = 0
+        self.scan_signature = ""
         self.csv_buffer.clear()
         self.scanned_buffer.clear()
         self._pending_scanned_keys.clear()
@@ -761,6 +906,7 @@ class AssetCommander(QMainWindow):
         self._risk_cap_notified.clear()
         self._table_sort_active = False
         self._table_sort_column = -1
+        self._set_scan_config_enabled(True)
         self._update_artifact_buttons()
         self.log("INFO", "当前工程已关闭。")
 
@@ -786,6 +932,7 @@ class AssetCommander(QMainWindow):
         self.doms.clear()
         self.scanned_set.clear()
         self.scanned_count = 0
+        self.scan_signature = ""
         self.csv_buffer.clear()
         self.scanned_buffer.clear()
         self._pending_scanned_keys.clear()
@@ -811,6 +958,7 @@ class AssetCommander(QMainWindow):
             except Exception as e:
                 self.log("ERROR", f"读取 {filename} 失败: {e}")
 
+        settings = {}
         settings_path = os.path.join(proj_dir, "settings.json")
         if os.path.exists(settings_path):
             try:
@@ -856,17 +1004,51 @@ class AssetCommander(QMainWindow):
         self.tb.setUpdatesEnabled(True)
         self.apply_table_sort()
 
-        self._load_scanned_index(proj_dir)
-
+        dict_config = self._load_dict_config(proj_dir, quiet=True)
+        policies = {
+            'k': settings.get('k', True),
+            '80': settings.get('80', True),
+            '443': settings.get('443', True),
+            'n': settings.get('n', True),
+            'abs': settings.get('abs', False),
+            'waf': settings.get('waf', False),
+            'sni': settings.get('sni', False),
+        }
+        self.scan_signature = self._build_scan_signature(
+            list(self.ips),
+            list(self.doms),
+            policies,
+            dict_config,
+        )
+        estimated_total = self._estimate_scan_total(
+            list(self.ips),
+            list(self.doms),
+            policies,
+            dict_config,
+        )
         progress_state = self._read_progress_state(proj_dir)
         self.last_scan_stats = progress_state.get("stats", {}) if isinstance(progress_state.get("stats"), dict) else {}
-        current_progress = self.scanned_count
-        total_progress = max(int(progress_state.get("total", 0) or 0), current_progress, 1)
+        progress_signature = str(progress_state.get("scan_signature", "") or "").strip()
+        can_restore_legacy = (
+            not progress_signature
+            and int(progress_state.get("current", 0) or 0) <= max(int(estimated_total), 1)
+        )
+        if progress_signature == self.scan_signature or can_restore_legacy:
+            self._migrate_legacy_scanned_log(proj_dir=proj_dir, signature=self.scan_signature)
+            self._load_scanned_index(proj_dir, signature=self.scan_signature)
+            current_progress = self.scanned_count
+            total_progress = max(int(progress_state.get("total", 0) or 0), current_progress, 1)
+        else:
+            current_progress = 0
+            total_progress = 1
+            if progress_state.get("current"):
+                self.log("INFO", "检测到当前工程配置已变化，旧断点进度不再复用，本轮将从 0 开始。")
         self.pg_bar.setMaximum(total_progress)
         self.pg_bar.setValue(current_progress)
 
         if current_progress:
             self.log("INFO", f"已恢复扫描进度: {current_progress} / {total_progress}")
+        self._set_scan_config_enabled(True)
         self._update_artifact_buttons()
         self.log("SUCCESS", f"工程载入成功，IP:{len(self.ips)}，Host:{len(self.doms)}，已扫描:{self.scanned_count}")
 
@@ -909,32 +1091,7 @@ class AssetCommander(QMainWindow):
         if not ip_list or not domain_list:
             return self.log("ERROR", "IP 池或域名池为空。")
 
-        self._load_scanned_index(self.proj, quiet=True)
-
-        dict_config = {}
-        dict_path = os.path.join(self.proj, "dict_config.json")
-        if os.path.exists(dict_path):
-            try:
-                with open(dict_path, 'r', encoding='utf-8') as f:
-                    dict_config = json.load(f)
-            except Exception as e:
-                self.log("ERROR", f"读取字典配置失败: {e}")
-
-        self.persist_project_state()
-        self.btn_c.setEnabled(False)
-        self.btn_c.setText("识别中...")
-        self.btn_stop.setEnabled(True)
-        self.btn_stop.setText("停止")
-
-        progress_state = self._read_progress_state()
-        current_progress = self.scanned_count
-        total_hint = max(int(progress_state.get("total", 0) or 0), current_progress, 1)
-        self.pg_bar.setMaximum(total_hint)
-        self.pg_bar.setValue(current_progress)
-
-        if current_progress:
-            self.log("INFO", f"从断点继续扫描，已扫描 {current_progress} 条任务。")
-
+        dict_config = self._load_dict_config(self.proj, quiet=False)
         policies = {
             'k': self.c_k.isChecked(),
             '80': self.c_8.isChecked(),
@@ -944,6 +1101,51 @@ class AssetCommander(QMainWindow):
             'waf': self.c_waf.isChecked(),
             'sni': self.c_sni.isChecked(),
         }
+        self.scan_signature = self._build_scan_signature(
+            ip_list,
+            domain_list,
+            policies,
+            dict_config,
+        )
+        estimated_total = self._estimate_scan_total(
+            ip_list,
+            domain_list,
+            policies,
+            dict_config,
+        )
+
+        progress_state = self._read_progress_state()
+        progress_signature = str(progress_state.get("scan_signature", "") or "").strip()
+        can_restore_legacy = (
+            not progress_signature
+            and int(progress_state.get("current", 0) or 0) <= max(int(estimated_total), 1)
+        )
+        if progress_signature == self.scan_signature or can_restore_legacy:
+            self._migrate_legacy_scanned_log(signature=self.scan_signature)
+            self._load_scanned_index(self.proj, quiet=True, signature=self.scan_signature)
+        else:
+            if progress_state.get("current"):
+                self.log("INFO", "检测到扫描配置变化，本轮不会复用旧断点进度。")
+            self.scanned_set.clear()
+            self.scanned_count = 0
+            self.scanned_buffer.clear()
+            self._pending_scanned_keys.clear()
+            progress_state = {}
+
+        self.persist_project_state()
+        self.btn_c.setEnabled(False)
+        self.btn_c.setText("识别中...")
+        self.btn_stop.setEnabled(True)
+        self.btn_stop.setText("停止")
+        self._set_scan_config_enabled(False)
+
+        current_progress = self.scanned_count
+        total_hint = max(int(progress_state.get("total", 0) or 0), current_progress, 1)
+        self.pg_bar.setMaximum(total_hint)
+        self.pg_bar.setValue(current_progress)
+
+        if current_progress:
+            self.log("INFO", f"从断点继续扫描，已扫描 {current_progress} 条任务。")
 
         self._write_progress_state(current=current_progress, total=total_hint, active=True)
 
@@ -982,6 +1184,7 @@ class AssetCommander(QMainWindow):
         self.btn_c.setText("启动对撞")
         self.btn_stop.setEnabled(False)
         self.btn_stop.setText("停止")
+        self._set_scan_config_enabled(True)
         self.apply_table_sort()
 
         title = "扫描已中止" if was_stopped else "扫描完成"
@@ -990,7 +1193,7 @@ class AssetCommander(QMainWindow):
             f"命中并写入战果: {stats.get('success', 0)} 条\n"
             f"失败/异常: {stats.get('fail', 0)} 条\n"
             f"当前断点进度: {current_progress} / {total_progress}\n\n"
-            f"results.csv、scanned.log、runtime.log、{SCAN_PROGRESS_FILE}、{FAIL_SAMPLE_FILE} 已保存，下次打开工程可继续。"
+            f"results.csv、断点记录文件、runtime.log、{SCAN_PROGRESS_FILE}、{FAIL_SAMPLE_FILE} 已保存，下次打开工程可继续。"
         )
         if int(stats.get('success', 0) or 0) == 0:
             msg += "\n\n本轮没有新增命中，所以 results.csv 不更新是正常现象。"
@@ -1127,7 +1330,7 @@ class AssetCommander(QMainWindow):
 
         if self.scanned_buffer:
             task_ids = list(dict.fromkeys(self.scanned_buffer))
-            scanned_path = os.path.join(self.proj, "scanned.log")
+            scanned_path = self._scanned_log_path(signature=self.scan_signature)
             try:
                 append_lines(scanned_path, task_ids)
                 self.scanned_buffer.clear()

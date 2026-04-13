@@ -84,7 +84,7 @@ class SubdomainDictDialog(QDialog):
 
         root.addWidget(splitter)
 
-        self.cb_enable = QCheckBox("启用动态字典注入（不预加载到内存）")
+        self.cb_enable = QCheckBox("启用外部字典扩展（会显著增加任务量；关闭后只扫描主面板域名）")
         self.cb_enable.setStyleSheet("font-size: 14px; font-weight: bold; color: #e3b341;")
         root.addWidget(self.cb_enable)
 

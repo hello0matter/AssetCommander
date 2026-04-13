@@ -1,0 +1,205 @@
+Backed up Elevoc settings to D:\tmp\anjian\pj\st\tmp\tmp\AssetCommander\elevoc_settings_backup_before_reinstall_20260331.dat
+=== Installing C:\Windows\System32\DriverStore\FileRepository\intcaudiobus.inf_amd64_cb0445dfe5544239\intcaudiobus.inf ===
+Microsoft PnP Utility
+
+Adding driver package:  intcaudiobus.inf
+Driver package added successfully. (Already exists in the system)
+Published Name:         oem69.inf
+Driver package is up-to-date on device: PCI\VEN_8086&DEV_A0C8&SUBSYS_2266088C&REV_30\3&11583659&0&FB
+
+Total driver packages:  1
+Added driver packages:  0
+=== Installing C:\Windows\System32\DriverStore\FileRepository\intcoed.inf_amd64_33284f5d2f7b1562\intcoed.inf ===
+Microsoft PnP Utility
+
+Adding driver package:  intcoed.inf
+Driver package added successfully. (Already exists in the system)
+Published Name:         oem191.inf
+Driver package is up-to-date on device: INTELAUDIO\DSP_CTLR_DEV_A0C8&VEN_8086&DEV_0222&SUBSYS_2266088C&REV_0030\4&235c76df&1&0800
+
+Total driver packages:  1
+Added driver packages:  0
+=== Installing C:\Windows\System32\DriverStore\FileRepository\intcdmic.inf_amd64_c6097727a94da534\IntcDMic.inf ===
+Microsoft PnP Utility
+
+Adding driver package:  IntcDMic.inf
+Driver package added successfully. (Already exists in the system)
+Published Name:         oem153.inf
+Driver package is up-to-date on device: INTELAUDIO\CTLR_DEV_A0C8&LINKTYPE_02&DEVTYPE_00&VEN_8086&DEV_AE20&SUBSYS_2266088C&REV_0001\5&2b176b07&0&0000
+
+Total driver packages:  1
+Added driver packages:  0
+=== Installing C:\Windows\System32\DriverStore\FileRepository\intcusb.inf_amd64_9457687510c9f4ce\intcusb.inf ===
+Microsoft PnP Utility
+
+Adding driver package:  intcusb.inf
+Driver package added successfully. (Already exists in the system)
+Published Name:         oem127.inf
+Driver package is up-to-date on device: INTELAUDIO\CTLR_DEV_A0C8&LINKTYPE_06&DEVTYPE_06&VEN_8086&DEV_AE50&SUBSYS_2266088C&REV_0001\0602
+
+Total driver packages:  1
+Added driver packages:  0
+=== Installing C:\Windows\System32\DriverStore\FileRepository\hdxsstrealme.inf_amd64_14001ddca52d33f6\hdxsstrealme.inf ===
+Microsoft PnP Utility
+
+Adding driver package:  hdxsstrealme.inf
+Driver package added successfully. (Already exists in the system)
+Published Name:         oem18.inf
+Driver package is up-to-date on device: INTELAUDIO\FUNC_01&VEN_10EC&DEV_0269&SUBSYS_088C2266&REV_1001\5&2b176b07&0&0001
+
+Total driver packages:  1
+Added driver packages:  0
+=== Installing C:\Windows\System32\DriverStore\FileRepository\realtekapo.inf_amd64_2a8d34c2796a10cc\realtekapo.inf ===
+Microsoft PnP Utility
+
+Adding driver package:  realtekapo.inf
+Driver package added successfully. (Already exists in the system)
+Published Name:         oem161.inf
+Driver package is up-to-date on device: SWD\DRIVERENUM\{c3a63edd-2d27-4b66-b155-5e94b43d926a}#RealtekAPO&6&3a892696&0
+
+Total driver packages:  1
+Added driver packages:  0
+=== Installing C:\Windows\System32\DriverStore\FileRepository\realtekhsa.inf_amd64_34a6abdc49167003\realtekhsa.inf ===
+Microsoft PnP Utility
+
+Adding driver package:  realtekhsa.inf
+Driver package added successfully. (Already exists in the system)
+Published Name:         oem113.inf
+Driver package is up-to-date on device: SWD\DRIVERENUM\{c3a63edd-2d27-4b66-b155-5e94b43d926a}#RealtekHSA&6&3a892696&0
+
+Total driver packages:  1
+Added driver packages:  0
+=== Installing C:\Windows\System32\DriverStore\FileRepository\realtekservice.inf_amd64_6375c9eb2bd56076\realtekservice.inf ===
+Microsoft PnP Utility
+
+Adding driver package:  realtekservice.inf
+Driver package added successfully. (Already exists in the system)
+Published Name:         oem144.inf
+Driver package is up-to-date on device: SWD\DRIVERENUM\{c3a63edd-2d27-4b66-b155-5e94b43d926a}#RealtekSRV&6&3a892696&0
+
+Total driver packages:  1
+Added driver packages:  0
+=== Installing C:\Windows\System32\DriverStore\FileRepository\elevocapo64.inf_amd64_73dfa793fd4df2e6\elevocapo64.inf ===
+Microsoft PnP Utility
+
+Adding driver package:  elevocapo64.inf
+Driver package added successfully. (Already exists in the system)
+Published Name:         oem197.inf
+Driver package is up-to-date on device: SWD\DRIVERENUM\{ff9cda1c-4ea3-48b3-b2c6-bbbf201a9139}#ElevocAPO&6&3a892696&0
+
+Total driver packages:  1
+Added driver packages:  0
+=== Installing C:\Windows\System32\DriverStore\FileRepository\elevochsa.inf_amd64_0a38473dfda31845\elevochsa.inf ===
+Microsoft PnP Utility
+
+Adding driver package:  elevochsa.inf
+Driver package added successfully. (Already exists in the system)
+Published Name:         oem258.inf
+Driver package is up-to-date on device: SWD\DRIVERENUM\{ff9cda1c-4ea3-48b3-b2c6-bbbf201a9139}#ElevocHSA&6&3a892696&0
+
+Total driver packages:  1
+Added driver packages:  0
+=== Installing C:\Windows\System32\DriverStore\FileRepository\elevocapo64ext.inf_amd64_0e8857933cb75c5c\elevocapo64ext.inf ===
+Microsoft PnP Utility
+
+Adding driver package:  elevocapo64ext.inf
+Driver package added successfully. (Already exists in the system)
+Published Name:         oem81.inf
+Driver package is up-to-date on device: INTELAUDIO\FUNC_01&VEN_10EC&DEV_0269&SUBSYS_088C2266&REV_1001\5&2b176b07&0&0001
+
+Total driver packages:  1
+Added driver packages:  0
+=== Installing C:\Windows\System32\DriverStore\FileRepository\intcdmicext_rl.inf_amd64_7a100313c18b5dc5\intcdmicext_rl.inf ===
+Microsoft PnP Utility
+
+Adding driver package:  intcdmicext_rl.inf
+Driver package added successfully. (Already exists in the system)
+Published Name:         oem187.inf
+Driver package is up-to-date on device: INTELAUDIO\CTLR_DEV_A0C8&LINKTYPE_02&DEVTYPE_00&VEN_8086&DEV_AE20&SUBSYS_2266088C&REV_0001\5&2b176b07&0&0000
+
+Total driver packages:  1
+Added driver packages:  0
+=== Installing C:\Windows\System32\DriverStore\FileRepository\hdx_realmeext_xperi4_elevoc.inf_amd64_b90f5f7a65ef480d\hdx_realmeext_xperi4_elevoc.inf ===
+Microsoft PnP Utility
+
+Adding driver package:  hdx_realmeext_xperi4_elevoc.inf
+Driver package added successfully. (Already exists in the system)
+Published Name:         oem83.inf
+Driver package is up-to-date on device: INTELAUDIO\FUNC_01&VEN_10EC&DEV_0269&SUBSYS_088C2266&REV_1001\5&2b176b07&0&0001
+
+Total driver packages:  1
+Added driver packages:  0
+=== Installing C:\Windows\System32\DriverStore\FileRepository\dtsapo4x64.inf_amd64_aafe121a4d3ed9a6\dtsapo4x64.inf ===
+Microsoft PnP Utility
+
+Adding driver package:  dtsapo4x64.inf
+Driver package added successfully. (Already exists in the system)
+Published Name:         oem252.inf
+Driver package is up-to-date on device: SWD\DRIVERENUM\{7675c3c9-1ede-4f1f-b10e-16e4ea1bbebd}#DTSAPO&6&3a892696&0
+
+Total driver packages:  1
+Added driver packages:  0
+=== Installing C:\Windows\System32\DriverStore\FileRepository\dtsapo4xservice.inf_amd64_87c2c36fcf8bd891\dtsapo4xservice.inf ===
+Microsoft PnP Utility
+
+Adding driver package:  dtsapo4xservice.inf
+Driver package added successfully. (Already exists in the system)
+Published Name:         oem179.inf
+Driver package is up-to-date on device: SWD\DRIVERENUM\{7675c3c9-1ede-4f1f-b10e-16e4ea1bbebd}#DTSService&6&3a892696&0
+
+Total driver packages:  1
+Added driver packages:  0
+=== Installing C:\Windows\System32\DriverStore\FileRepository\dtsaudioprocessinghsa.inf_amd64_33bafb354467ef97\dtsaudioprocessinghsa.inf ===
+Microsoft PnP Utility
+
+Adding driver package:  dtsaudioprocessinghsa.inf
+Driver package added successfully. (Already exists in the system)
+Published Name:         oem77.inf
+Driver package is up-to-date on device: SWD\DRIVERENUM\{7675c3c9-1ede-4f1f-b10e-16e4ea1bbebd}#DTSHSA&6&3a892696&0
+
+Total driver packages:  1
+Added driver packages:  0
+=== Installing C:\Windows\System32\DriverStore\FileRepository\dtsapo4realmeextpkg.inf_amd64_8cafe68dfc8680e8\dtsapo4realmeextpkg.inf ===
+Microsoft PnP Utility
+
+Adding driver package:  dtsapo4realmeextpkg.inf
+Driver package added successfully. (Already exists in the system)
+Published Name:         oem231.inf
+Driver package is up-to-date on device: INTELAUDIO\FUNC_01&VEN_10EC&DEV_0269&SUBSYS_088C2266&REV_1001\5&2b176b07&0&0001
+
+Total driver packages:  1
+Added driver packages:  0
+Reapplied Elevoc mode=0 setting.
+Restarted device: INTELAUDIO\CTLR_DEV_A0C8&LINKTYPE_02&DEVTYPE_00&VEN_8086&DEV_AE20&SUBSYS_2266088C&REV_0001\5&2b176b07&0&0000
+Restarted device: INTELAUDIO\FUNC_01&VEN_10EC&DEV_0269&SUBSYS_088C2266&REV_1001\5&2b176b07&0&0001
+Restarted device: SWD\MMDEVAPI\{0.0.1.00000000}.{533F5D8B-AF15-4D51-B41A-EB1F9E6040D5}
+Restarted service: IntelAudioService
+Restarted service: RtkAudioUniversalService
+Restarted service: DtsApo4Service
+Restarted service: ElevocService
+Restarted service: AudioEndpointBuilder
+Restarted service: Audiosrv
+=== Final audio device snapshot ===
+
+Name                               Manufacturer                Status PNPDeviceID
+----                               ------------                ------ -----------
+Realtek High Definition Audio      Realtek                     OK     INTELAUDIO\FUNC_01&VEN_10EC&DEV_0269&SUBSYS_088C2…
+适用于数字麦克风的英特尔® 智音技术 Intel(R) Corporation        OK     INTELAUDIO\CTLR_DEV_A0C8&LINKTYPE_02&DEVTYPE_00&V…
+适用于 USB 音频的英特尔® 智音技术  Intel(R) Corporation        OK     INTELAUDIO\CTLR_DEV_A0C8&LINKTYPE_06&DEVTYPE_06&V…
+Steam Streaming Microphone         Valve Corporation Audio DDK Error  ROOT\STEAMSTREAMINGMICROPHONE\0000
+Steam Streaming Speakers           Valve Corporation Audio DDK OK     ROOT\STEAMSTREAMINGSPEAKERS\0000
+
+
+
+FriendlyName                                    Status  InstanceId
+------------                                    ------  ----------
+扬声器 (Steam Streaming Microphone)             Unknown SWD\MMDEVAPI\{0.0.0.00000000}.{3EF0005E-50BF-4FEA-A3E6-7E7BD05E…
+HDMI (HD Audio Driver for Display Audio)        OK      SWD\MMDEVAPI\{0.0.0.00000000}.{730650E1-ED00-4EFA-9FC0-D5023491…
+扬声器 (Steam Streaming Speakers)               OK      SWD\MMDEVAPI\{0.0.0.00000000}.{C5A313DE-D4A8-4B65-8463-BDAADA26…
+内部 AUX 插座 (Steam Streaming Speakers)        Unknown SWD\MMDEVAPI\{0.0.1.00000000}.{51C3C4CF-F771-40E2-A414-A9891565…
+麦克风阵列 (适用于数字麦克风的英特尔® 智音技术) OK      SWD\MMDEVAPI\{0.0.1.00000000}.{533F5D8B-AF15-4D51-B41A-EB1F9E60…
+立体声混音 (Realtek(R) Audio)                   OK      SWD\MMDEVAPI\{0.0.1.00000000}.{B8CEEA2B-A82A-49FC-B939-8FB03991…
+扬声器 (Realtek(R) Audio)                       OK      SWD\MMDEVAPI\{0.0.0.00000000}.{B5A034CA-EBA3-4329-9040-41D74375…
+Microphone (Steam Streaming Microphone)         Unknown SWD\MMDEVAPI\{0.0.1.00000000}.{52453890-A457-41C1-BD71-33B8F224…
+
+

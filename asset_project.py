@@ -119,6 +119,7 @@ def write_progress_state(
     bar_total=0,
     active=None,
     stats=None,
+    scan_signature=None,
 ):
     if not project_dir:
         return {}
@@ -140,6 +141,8 @@ def write_progress_state(
     state["total"] = total
     if active is not None:
         state["active"] = bool(active)
+    if scan_signature is not None:
+        state["scan_signature"] = str(scan_signature or "")
     if isinstance(stats, dict):
         state["stats"] = {
             "total": int(stats.get("total", 0) or 0),
