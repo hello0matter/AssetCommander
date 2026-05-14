@@ -19,6 +19,9 @@ from asset_common import (
     RESULT_FIELDS,
     SCAN_PROGRESS_FILE,
     WORKSPACE_DIR,
+    collect_unique_hosts,
+    collect_unique_ips,
+    derive_site_label,
     get_base_config,
     install_global_crash_handlers,
     normalize_task_record,
@@ -150,6 +153,76 @@ class AssetCommander(QMainWindow):
         self.csv_timer.start(2000)
         self._update_artifact_buttons()
 
+    def _set_pool_text(self, widget, items):
+        unique_items = list(dict.fromkeys(item for item in items if item))
+        widget.setPlainText("\n".join(unique_items) + ("\n" if unique_items else ""))
+
+    def _current_ip_pool(self):
+        return collect_unique_ips(self.i_pl.toPlainText().splitlines())
+
+    def _current_domain_pool(self):
+        return collect_unique_hosts(self.d_pl.toPlainText().splitlines())
+
+    def _sanitize_ip_pool(self):
+        self._set_pool_text(self.i_pl, self._current_ip_pool())
+
+    def _sanitize_domain_pool(self):
+        domains = []
+        for host in self._current_domain_pool():
+            if not re.fullmatch(RE_IP, host):
+                domains.append(host)
+        self._set_pool_text(self.d_pl, domains)
+
+    def _set_result_header_tooltips(self):
+        tips = {
+            0: "实际发包目标，通常是 IP 或 IP:端口。",
+            1: "更适合人工识别的站点身份，通常带协议。",
+            2: "本次碰撞注入的 Host 头。",
+            3: "Host 碰撞请求返回的状态码。",
+            4: "Host 碰撞请求响应长度。",
+            5: "Host 碰撞请求页面标题。",
+            6: "引擎给出的风险置信度。",
+            7: "差异判断和命中原因说明。",
+        }
+        for column, tip in tips.items():
+            header_item = self.tb.horizontalHeaderItem(column)
+            if header_item is not None:
+                header_item.setToolTip(tip)
+
+    def _apply_result_item_style(self, item, field, conf):
+        base_bg = None
+        base_fg = QColor(201, 209, 217)
+        if field == "url":
+            base_bg = QColor(31, 111, 235, 28)
+            base_fg = QColor(88, 166, 255)
+        elif field == "site":
+            base_bg = QColor(35, 134, 54, 28)
+            base_fg = QColor(63, 185, 80)
+        elif field == "host":
+            base_bg = QColor(210, 153, 34, 28)
+            base_fg = QColor(227, 179, 65)
+        elif field in {"code", "len"}:
+            base_fg = QColor(139, 148, 158)
+
+        if base_bg is not None:
+            item.setBackground(base_bg)
+        item.setForeground(base_fg)
+
+        if "极危" in conf:
+            if field in {"conf", "remark"}:
+                item.setBackground(QColor(248, 81, 73, 45))
+            item.setForeground(QColor(255, 123, 114))
+        elif "高危" in conf:
+            if field in {"conf", "remark"}:
+                item.setBackground(QColor(35, 134, 54, 40))
+            item.setForeground(QColor(88, 166, 255))
+        elif "中危" in conf:
+            if field in {"conf", "remark"}:
+                item.setBackground(QColor(210, 153, 34, 28))
+            item.setForeground(QColor(210, 153, 34))
+        elif field not in {"url", "site", "host", "code", "len"}:
+            item.setForeground(QColor(139, 148, 158))
+
     def select_dict(self):
         path, _ = QFileDialog.getOpenFileName(self, "选择无差别碰撞字典", "", "Text Files (*.txt);;All Files (*)")
         if path:
@@ -163,63 +236,42 @@ class AssetCommander(QMainWindow):
 
     def inject_internal_hosts(self):
         internal_hosts = [
-            "127.0.0.1", "localhost", "127.1", "127.0.1", "0.0.0.0",
-            "::1", "[::1]", "0x7f000001", "2130706433", "0177.0.0.1",
-            "10.0.0.1", "10.0.0.254", "10.1.1.1", "10.10.10.1",
-            "192.168.0.1", "192.168.1.1", "192.168.1.254", "192.168.3.1", "192.168.10.1",
-            "172.16.0.1", "172.16.0.254", "172.17.0.1",
-            "169.254.169.254", "100.100.100.200",
             "kubernetes.default", "kubernetes.default.svc",
-            "docker.for.mac.localhost", "host.docker.internal",
-            "localdomain", "broadcasthost", "internal",
+            "kubernetes.default.svc.cluster.local",
+            "host.docker.internal",
+            "gateway.docker.internal",
+            "localhost",
         ]
-
-        current_doms = [x.strip() for x in self.d_pl.toPlainText().split('\n') if x.strip()]
-        all_doms = current_doms + internal_hosts
-        unique_doms = list(dict.fromkeys(all_doms))
-        
-        self.d_pl.setPlainText("\n".join(unique_doms) + "\n")
+        current_doms = self._current_domain_pool()
+        self._set_pool_text(self.d_pl, current_doms + internal_hosts)
         self.log("SUCCESS", f"成功注入 {len(internal_hosts)} 个高价值内网/云原生 Host，已准备好继续测试。")
 
     def inject_internal_ips(self):
         internal_ips = [
-            "10.0.0.1", "10.0.0.254", "10.1.1.1", "10.10.10.1",
-            "192.168.0.1", "192.168.1.1", "192.168.1.254", "192.168.3.1", "192.168.10.1", "192.168.100.1",
-            "172.16.0.1", "172.16.0.254", 
+            "127.0.0.1",
+            "169.254.169.254",
+            "100.100.100.200",
             "172.17.0.1",
-            "169.254.169.254", "100.64.0.1",
-            "127.0.0.1", "0.0.0.0"
+            "192.168.1.1",
+            "10.0.0.1",
         ]
-        
-        current_ips = [x.strip() for x in self.i_pl.toPlainText().split('\n') if x.strip()]
-        all_ips = current_ips + internal_ips
-        unique_ips = list(dict.fromkeys(all_ips))
-        
-        self.i_pl.setPlainText("\n".join(unique_ips) + "\n")
+        current_ips = self._current_ip_pool()
+        self._set_pool_text(self.i_pl, current_ips + internal_ips)
         self.log("SUCCESS", f"成功注入 {len(internal_ips)} 个高价值内网 IP（网关 / 元数据 / 回环）。")
 
     def deduplicate_pools(self):
-        for pl in [self.i_pl, self.d_pl]:
-            lines = [line.strip() for line in pl.toPlainText().split('\n') if line.strip()]
-            unique_lines = list(dict.fromkeys(lines))
-            pl.setPlainText("\n".join(unique_lines) + ("\n" if unique_lines else ""))
+        self._sanitize_ip_pool()
+        self._sanitize_domain_pool()
         self.log("SUCCESS", "资产清理完毕，IP 池与域名池已完成一键去重。")
 
     def open_custom_bind(self):
         if not self.proj: return QMessageBox.warning(self, "提示", "请先选择或新建一个工程。")
         dlg = CustomBindDialog(self, self.proj)
         if dlg.exec() == QDialog.Accepted:
-            # 获取主界面当前数据
-            cur_ips = [x.strip() for x in self.i_pl.toPlainText().split('\n') if x.strip()]
-            cur_doms = [x.strip() for x in self.d_pl.toPlainText().split('\n') if x.strip()]
-            
-            # 追加新数据
-            all_ips = cur_ips + dlg.ips
-            all_doms = cur_doms + dlg.domains
-            
-            # 自动去重并回填到主界面
-            self.i_pl.setPlainText("\n".join(list(dict.fromkeys(all_ips))) + "\n")
-            self.d_pl.setPlainText("\n".join(list(dict.fromkeys(all_doms))) + "\n")
+            all_ips = self._current_ip_pool() + dlg.ips
+            all_doms = self._current_domain_pool() + dlg.domains
+            self._set_pool_text(self.i_pl, all_ips)
+            self._set_pool_text(self.d_pl, all_doms)
             self.log("SUCCESS", f"自定义绑定成功，已注入并去重 {len(dlg.ips)} 个 IP 和 {len(dlg.domains)} 个域名。")
     def open_ip_fission(self):
         self.fission_dialog = IPFissionDialog(self, ip_pool_widget=self.i_pl, proj_dir=self.proj)
@@ -230,7 +282,7 @@ class AssetCommander(QMainWindow):
         self.hunter_dialog.show()
 
     def open_ip_reverse(self):
-        ips = [ip.strip() for ip in self.i_pl.toPlainText().split() if ip.strip()]
+        ips = self._current_ip_pool()
         self.rev_dialog = ReverseIPDialog(self, dom_pool_widget=self.d_pl, ips=ips, proj_dir=self.proj)
         self.rev_dialog.show()
 
@@ -412,12 +464,14 @@ class AssetCommander(QMainWindow):
         sp.addWidget(lb)
 
         # --- 右侧：结果表格区域 ---
-        self.tb = QTableWidget(0, 7)
-        self.tb.setHorizontalHeaderLabels(["Target", "Host", "Code", "Len", "Title", "置信度", "智能诊断"])
+        self.tb = QTableWidget(0, 8)
+        self.tb.setHorizontalHeaderLabels(["Target(IP/URL)", "站点身份", "Host 头", "Code", "Len", "Title", "置信度", "智能诊断"])
         self.tb.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
         self.tb.horizontalHeader().setStretchLastSection(True)
         self.tb.setColumnWidth(0, 220)
-        self.tb.setColumnWidth(1, 200)
+        self.tb.setColumnWidth(1, 240)
+        self.tb.setColumnWidth(2, 220)
+        self.tb.setColumnWidth(7, 320)
         self._table_sort_active = False
         self._table_sort_column = -1
         self._table_sort_order = Qt.AscendingOrder
@@ -425,6 +479,7 @@ class AssetCommander(QMainWindow):
         header.setSortIndicatorShown(True)
         header.sectionClicked.connect(self.handle_table_sort_click)
         self.tb.setSortingEnabled(False)
+        self._set_result_header_tooltips()
         
         sp.addWidget(self.tb); sp.setStretchFactor(1, 2); ml.addWidget(sp)
 
@@ -526,14 +581,19 @@ class AssetCommander(QMainWindow):
         self.i_pl.blockSignals(True); self.d_pl.blockSignals(True)
         ip_c, dom_c = False, False
 
-        for i in re.findall(RE_AST, t):
-            ci = i.replace("http://","").replace("https://","").strip().split('/')[0]
-            if ci not in self.ips: self.ips.add(ci); self.i_pl.append(ci); ip_c = True
+        for ip in collect_unique_ips(re.findall(RE_AST, t)):
+            if ip not in self.ips:
+                self.ips.add(ip)
+                self.i_pl.append(ip)
+                ip_c = True
 
         ex = [".html", ".js", ".css", ".py", ".exe", "fscan", "version"]
-        for d in re.findall(RE_DOM, t):
-            if "." in d and d not in self.doms and not any(x in d.lower() for x in ex):
-                self.doms.add(d); self.d_pl.append(d); dom_c = True
+        candidates = collect_unique_hosts(re.findall(RE_DOM, t))
+        for host in candidates:
+            if "." in host and host not in self.doms and not any(x in host.lower() for x in ex):
+                self.doms.add(host)
+                self.d_pl.append(host)
+                dom_c = True
                 
         self.i_pl.blockSignals(False); self.d_pl.blockSignals(False)
         if ip_c: self.sv_f("ips.txt", self.i_pl)
@@ -556,15 +616,13 @@ class AssetCommander(QMainWindow):
         if not self.proj: return QMessageBox.warning(self, "提示", "请先选择工程")
         if hasattr(self, 'th') and self.th.isRunning(): return self.log("ERROR", "外部工具仍在运行，请等待结束。")
 
-        target = (
-            self.t_ed.text()
-            .strip()
-            .replace("http://", "")
-            .replace("https://", "")
-            .split("/")[0]
-            .split(":")[0]
-            .strip()
-        )
+        raw_target = self.t_ed.text().strip()
+        ip_target = collect_unique_ips([raw_target])
+        if ip_target:
+            target = ip_target[0]
+        else:
+            host_target = collect_unique_hosts([raw_target])
+            target = host_target[0] if host_target else ""
         if not target:
             return self.log("ERROR", "OFA 目标为空。")
 
@@ -588,12 +646,13 @@ class AssetCommander(QMainWindow):
             for row in range(self.tb.rowCount()):
                 row_data = {
                     "url": self.tb.item(row, 0).text() if self.tb.item(row, 0) else "",
-                    "host": self.tb.item(row, 1).text() if self.tb.item(row, 1) else "",
-                    "code": self.tb.item(row, 2).text() if self.tb.item(row, 2) else "",
-                    "len": self.tb.item(row, 3).text() if self.tb.item(row, 3) else "",
-                    "title": self.tb.item(row, 4).text() if self.tb.item(row, 4) else "",
-                    "conf": self.tb.item(row, 5).text() if self.tb.item(row, 5) else "",
-                    "remark": self.tb.item(row, 6).text() if self.tb.item(row, 6) else "",
+                    "site": self.tb.item(row, 1).text() if self.tb.item(row, 1) else "",
+                    "host": self.tb.item(row, 2).text() if self.tb.item(row, 2) else "",
+                    "code": self.tb.item(row, 3).text() if self.tb.item(row, 3) else "",
+                    "len": self.tb.item(row, 4).text() if self.tb.item(row, 4) else "",
+                    "title": self.tb.item(row, 5).text() if self.tb.item(row, 5) else "",
+                    "conf": self.tb.item(row, 6).text() if self.tb.item(row, 6) else "",
+                    "remark": self.tb.item(row, 7).text() if self.tb.item(row, 7) else "",
                 }
                 if row_data["url"]:
                     rows.append(row_data)
@@ -953,8 +1012,12 @@ class AssetCommander(QMainWindow):
             try:
                 with open(path, 'r', encoding='utf-8', errors='ignore') as f:
                     content = f.read()
-                widget.setPlainText(content)
-                bucket.update(line.strip() for line in content.splitlines() if line.strip())
+                if filename == "ips.txt":
+                    items = collect_unique_ips(content.splitlines())
+                else:
+                    items = collect_unique_hosts(content.splitlines())
+                self._set_pool_text(widget, items)
+                bucket.update(items)
             except Exception as e:
                 self.log("ERROR", f"读取 {filename} 失败: {e}")
 
@@ -1086,8 +1149,8 @@ class AssetCommander(QMainWindow):
         if hasattr(self, 'cth') and self.cth.isRunning():
             return self.log("ERROR", "上一轮对撞任务仍在进行中。")
 
-        ip_list = [x.strip() for x in self.i_pl.toPlainText().split() if x.strip()]
-        domain_list = list(dict.fromkeys(x.strip() for x in self.d_pl.toPlainText().split() if x.strip()))
+        ip_list = self._current_ip_pool()
+        domain_list = self._current_domain_pool()
         if not ip_list or not domain_list:
             return self.log("ERROR", "IP 池或域名池为空。")
 
@@ -1346,6 +1409,7 @@ class AssetCommander(QMainWindow):
 
     def add_res_ui(self, d, save=True):
         row_data, _ = normalize_result_row(d)
+        row_data["site"] = derive_site_label(row_data.get("url", ""), row_data.get("host", ""))
         if save and self.proj:
             self.csv_buffer.append(row_data)
             if len(self.csv_buffer) >= 200:
@@ -1408,17 +1472,16 @@ class AssetCommander(QMainWindow):
                 )
             else:
                 item = SortableTableWidgetItem(str(value))
+            if field == "url":
+                item.setToolTip("实际发包目标，通常是 IP 或 IP:端口。")
+            elif field == "site":
+                item.setToolTip("用于人工识别站点的展示列。")
+            elif field == "host":
+                item.setToolTip("本次请求注入的 Host 头。")
+            elif field == "remark":
+                item.setToolTip(str(value))
 
-            if "极危" in conf:
-                item.setBackground(QColor(248, 81, 73, 45))
-                item.setForeground(QColor(255, 123, 114))
-            elif "高危" in conf:
-                item.setBackground(QColor(35, 134, 54, 40))
-                item.setForeground(QColor(88, 166, 255))
-            elif "中危" in conf:
-                item.setForeground(QColor(210, 153, 34))
-            else:
-                item.setForeground(QColor(139, 148, 158))
+            self._apply_result_item_style(item, field, conf)
 
             self.tb.setItem(row_index, col_index, item)
 

@@ -1,6 +1,7 @@
 import asyncio
 import faulthandler
 import hashlib
+import ipaddress
 import json
 import os
 import re
@@ -18,7 +19,7 @@ CONFIG_FILE = "config.json"
 WORKSPACE_DIR = "workspace"
 GLOBAL_LOG_FILE = "AssetCommander.log"
 CRASH_DUMP_FILE = "AssetCommander-crash.log"
-RESULT_FIELDS = ["url", "host", "code", "len", "title", "conf", "remark"]
+RESULT_FIELDS = ["url", "site", "host", "code", "len", "title", "conf", "remark"]
 LOW_RISK_UI_LIMIT = 800
 SCAN_PROGRESS_FILE = "scan_progress.json"
 FAIL_SAMPLE_FILE = "fail_samples.log"
@@ -213,6 +214,112 @@ def extract_title(html_text):
     if match:
         return match.group(1).strip().replace("\n", "").replace("\r", "")
     return "N/A"
+
+
+def split_token_candidates(raw_text):
+    return [
+        token.strip()
+        for token in re.split(r"[\s,;，；]+", str(raw_text or ""))
+        if token.strip()
+    ]
+
+
+def normalize_ip_value(value):
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+
+    candidate = raw
+    if "://" in candidate:
+        candidate = candidate.split("://", 1)[1]
+    candidate = candidate.split("/", 1)[0].strip("[]")
+    if ":" in candidate:
+        host, _, port = candidate.partition(":")
+        if port.isdigit():
+            candidate = host
+
+    try:
+        return str(ipaddress.ip_address(candidate))
+    except ValueError:
+        return ""
+
+
+def normalize_ip_target(value):
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+
+    candidate = raw
+    if "://" in candidate:
+        candidate = candidate.split("://", 1)[1]
+    candidate = candidate.split("/", 1)[0].strip().strip("[]")
+
+    host = candidate
+    port = ""
+    if ":" in candidate:
+        maybe_host, _, maybe_port = candidate.partition(":")
+        if maybe_port.isdigit():
+            host = maybe_host
+            port = maybe_port
+
+    normalized_host = normalize_ip_value(host)
+    if not normalized_host:
+        return ""
+    if port:
+        return f"{normalized_host}:{port}"
+    return normalized_host
+
+
+def collect_unique_ips(raw_values):
+    seen = set()
+    items = []
+    for raw_value in raw_values or []:
+        for token in split_token_candidates(raw_value):
+            normalized = normalize_ip_target(token)
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                items.append(normalized)
+    return items
+
+
+def normalize_host_value(value):
+    raw = str(value or "").strip().lower()
+    if not raw:
+        return ""
+    if "://" in raw:
+        raw = raw.split("://", 1)[1]
+    raw = raw.split("/", 1)[0].strip().strip("[]")
+    return raw
+
+
+def collect_unique_hosts(raw_values):
+    seen = set()
+    items = []
+    for raw_value in raw_values or []:
+        for token in split_token_candidates(raw_value):
+            normalized = normalize_host_value(token)
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                items.append(normalized)
+    return items
+
+
+def derive_site_label(url, host):
+    clean_url = str(url or "").strip()
+    clean_host = normalize_host_value(host)
+    if not clean_host and clean_url:
+        target = clean_url.split("://", 1)[-1].split("/", 1)[0]
+        clean_host = normalize_host_value(target)
+
+    if not clean_host:
+        return clean_url
+
+    scheme = ""
+    if "://" in clean_url:
+        scheme = clean_url.split("://", 1)[0].strip().lower()
+    if scheme:
+        return f"{scheme}://{clean_host}"
+    return clean_host
 
 
 __all__ = [

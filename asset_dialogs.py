@@ -1,14 +1,18 @@
+import csv
 import json
 import os
 import ipaddress
 import re
 
+from asset_bindings import append_domain_bindings, load_domain_bindings
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QCheckBox,
+    QComboBox,
     QDialog,
     QFileDialog,
+    QGridLayout,
     QHBoxLayout,
     QLabel,
     QHeaderView,
@@ -24,7 +28,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from asset_common import RE_IP
+from asset_common import RE_IP, collect_unique_hosts, collect_unique_ips, normalize_host_value
 from asset_tasks import DnsResolverTask, FissionTask, ReverseIPTask
 
 
@@ -153,6 +157,7 @@ class CustomBindDialog(QDialog):
         self.proj_dir = proj_dir
         self.ips = []
         self.domains = []
+        self.binding_view_dialog = None
         self.setStyleSheet("""
             QDialog { background-color: #0d1117; color: #c9d1d9; font-family: 'Microsoft YaHei'; }
             QTextEdit { background-color: #161b22; border: 1px solid #30363d; color: #c9d1d9; }
@@ -181,15 +186,21 @@ class CustomBindDialog(QDialog):
 
         layout.addLayout(form)
 
+        btn_row = QHBoxLayout()
+        self.btn_view_bindings = QPushButton("查看绑定关系")
+        self.btn_view_bindings.setStyleSheet("background-color: #1f6feb;")
+        self.btn_view_bindings.clicked.connect(self.open_binding_view)
+        btn_row.addWidget(self.btn_view_bindings)
+        btn_row.addStretch(1)
+        layout.addLayout(btn_row)
+
         self.btn_confirm = QPushButton("确定绑定并注入主面板")
         self.btn_confirm.clicked.connect(self.accept_data)
         layout.addWidget(self.btn_confirm)
 
     def accept_data(self):
-        self.ips = [item.strip() for item in self.ip_edit.toPlainText().split("\n") if item.strip()]
-        self.domains = [
-            item.strip() for item in self.domain_edit.toPlainText().split("\n") if item.strip()
-        ]
+        self.ips = collect_unique_ips(self.ip_edit.toPlainText().splitlines())
+        self.domains = collect_unique_hosts(self.domain_edit.toPlainText().splitlines())
 
         if not self.ips or not self.domains:
             QMessageBox.warning(self, "提示", "IP 和域名都不能为空。")
@@ -205,30 +216,232 @@ class CustomBindDialog(QDialog):
                 return
 
         if self.proj_dir:
-            path = os.path.join(self.proj_dir, "domain_to_ip.json")
-            cache = {}
-            if os.path.exists(path):
-                try:
-                    with open(path, "r", encoding="utf-8") as handle:
-                        cache = json.load(handle)
-                except Exception:
-                    pass
-
-            for domain in self.domains:
-                clean_domain = domain.split(":")[0]
-                cache.setdefault(clean_domain, [])
-                for ip in self.ips:
-                    clean_ip = ip.split(":")[0]
-                    if clean_ip not in cache[clean_domain]:
-                        cache[clean_domain].append(clean_ip)
-
-            try:
-                with open(path, "w", encoding="utf-8") as handle:
-                    json.dump(cache, handle, indent=4, ensure_ascii=False)
-            except Exception:
-                pass
+            self._save_bindings(self.domains, self.ips)
 
         self.accept()
+
+    def _bindings_path(self):
+        if not self.proj_dir:
+            return ""
+        return os.path.join(self.proj_dir, "domain_to_ip.json")
+
+    def _load_bindings(self):
+        return load_domain_bindings(self.proj_dir)
+
+    def _save_bindings(self, domains, ips):
+        if not self.proj_dir:
+            return
+        append_domain_bindings(
+            self.proj_dir,
+            {domain: ips for domain in collect_unique_hosts(domains)},
+        )
+
+    def open_binding_view(self):
+        if not self.proj_dir:
+            QMessageBox.warning(self, "提示", "请先打开或新建一个工程。")
+            return
+        self.binding_view_dialog = BindingViewerDialog(self, self.proj_dir)
+        self.binding_view_dialog.exec()
+
+
+class BindingViewerDialog(QDialog):
+    def __init__(self, parent=None, proj_dir=None):
+        super().__init__(parent)
+        self.proj_dir = proj_dir
+        self.forward_rows = []
+        self.reverse_rows = []
+        self.binding_domain_count = 0
+        self.binding_ip_count = 0
+        self.binding_edge_count = 0
+        self.filtered_rows = []
+        self.setWindowTitle("绑定关系查看器")
+        self.resize(900, 620)
+        self.setStyleSheet("""
+            QDialog { background-color: #0d1117; color: #c9d1d9; font-family: 'Microsoft YaHei'; }
+            QLineEdit, QTextEdit { background-color: #161b22; border: 1px solid #30363d; color: #c9d1d9; }
+            QTableWidget { background-color: #161b22; border: 1px solid #30363d; gridline-color: #30363d; }
+            QHeaderView::section { background-color: #21262d; border: 1px solid #30363d; font-weight: bold; color: #c9d1d9; }
+            QPushButton { background-color: #238636; color: white; font-weight: bold; padding: 7px; border-radius: 3px; }
+            QPushButton:hover { background-color: #2ea043; }
+        """)
+        self.init_ui()
+        self.reload_rows()
+
+    def init_ui(self):
+        layout = QVBoxLayout(self)
+
+        filter_row = QGridLayout()
+        filter_row.addWidget(QLabel("视图:"), 0, 0)
+        self.view_mode = QComboBox()
+        self.view_mode.addItems(["域名 -> IP", "IP -> 域名"])
+        self.view_mode.currentIndexChanged.connect(self.apply_filter)
+        filter_row.addWidget(self.view_mode, 0, 1)
+
+        filter_row.addWidget(QLabel("搜索:"), 0, 2)
+        self.search_edit = QLineEdit()
+        self.search_edit.setPlaceholderText("支持按域名、IP、数量搜索")
+        self.search_edit.textChanged.connect(self.apply_filter)
+        filter_row.addWidget(self.search_edit, 0, 3)
+
+        self.cb_multi_only = QCheckBox("只看多绑关系")
+        self.cb_multi_only.stateChanged.connect(self.apply_filter)
+        filter_row.addWidget(self.cb_multi_only, 0, 4)
+
+        self.cb_empty_only = QCheckBox("只看空绑定")
+        self.cb_empty_only.stateChanged.connect(self.apply_filter)
+        filter_row.addWidget(self.cb_empty_only, 0, 5)
+
+        self.cb_dense_only = QCheckBox("只看高密度(>=5)")
+        self.cb_dense_only.stateChanged.connect(self.apply_filter)
+        filter_row.addWidget(self.cb_dense_only, 0, 6)
+
+        self.btn_reload = QPushButton("刷新")
+        self.btn_reload.setStyleSheet("background-color: #1f6feb;")
+        self.btn_reload.clicked.connect(self.reload_rows)
+        filter_row.addWidget(self.btn_reload, 0, 7)
+
+        self.btn_export = QPushButton("导出当前结果")
+        self.btn_export.setStyleSheet("background-color: #8957e5;")
+        self.btn_export.clicked.connect(self.export_filtered_rows)
+        filter_row.addWidget(self.btn_export, 0, 8)
+        layout.addLayout(filter_row)
+
+        self.tb = QTableWidget(0, 3)
+        self.tb.setHorizontalHeaderLabels(["域名", "绑定 IP", "数量"])
+        self.tb.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        self.tb.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.tb.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        self.tb.setAlternatingRowColors(True)
+        layout.addWidget(self.tb)
+
+        self.stats_label = QLabel("")
+        self.stats_label.setStyleSheet("color: #58a6ff;")
+        layout.addWidget(self.stats_label)
+
+        hint = QLabel("提示: 绑定关系来自工程目录下的 domain_to_ip.json，搜索为即时过滤。")
+        hint.setStyleSheet("color: #8b949e;")
+        layout.addWidget(hint)
+
+    def reload_rows(self):
+        self.forward_rows = []
+        self.reverse_rows = []
+        reverse_map = {}
+        raw_cache = load_domain_bindings(self.proj_dir)
+        for domain, ips in raw_cache.items():
+            clean_domain = normalize_host_value(domain)
+            clean_ips = collect_unique_ips(ips if isinstance(ips, list) else [ips])
+            if clean_domain:
+                self.forward_rows.append(
+                    {
+                        "left": clean_domain,
+                        "right_items": clean_ips,
+                        "right_text": ", ".join(clean_ips),
+                        "count": len(clean_ips),
+                    }
+                )
+            for ip in clean_ips:
+                reverse_map.setdefault(ip, [])
+                if clean_domain not in reverse_map[ip]:
+                    reverse_map[ip].append(clean_domain)
+
+        self.binding_domain_count = len(self.forward_rows)
+        self.binding_ip_count = len(reverse_map)
+        self.binding_edge_count = sum(item["count"] for item in self.forward_rows)
+
+        for ip, domains in reverse_map.items():
+            sorted_domains = sorted(domains)
+            self.reverse_rows.append(
+                {
+                    "left": ip,
+                    "right_items": sorted_domains,
+                    "right_text": ", ".join(sorted_domains),
+                    "count": len(sorted_domains),
+                }
+            )
+
+        self.forward_rows.sort(key=lambda item: (item["left"], -item["count"]))
+        self.reverse_rows.sort(key=lambda item: (item["left"], -item["count"]))
+        self.apply_filter()
+
+    def apply_filter(self):
+        is_reverse = self.view_mode.currentIndex() == 1
+        if is_reverse:
+            self.tb.setHorizontalHeaderLabels(["IP", "绑定域名", "数量"])
+            source_rows = self.reverse_rows
+            left_name = "IP"
+        else:
+            self.tb.setHorizontalHeaderLabels(["域名", "绑定 IP", "数量"])
+            source_rows = self.forward_rows
+            left_name = "域名"
+
+        keyword = self.search_edit.text().strip().lower()
+        multi_only = self.cb_multi_only.isChecked()
+        empty_only = self.cb_empty_only.isChecked()
+        dense_only = self.cb_dense_only.isChecked()
+        filtered = []
+        for row in source_rows:
+            if multi_only and int(row["count"]) <= 1:
+                continue
+            if empty_only and int(row["count"]) != 0:
+                continue
+            if dense_only and int(row["count"]) < 5:
+                continue
+            haystack = f"{row['left']} {row['right_text']} {row['count']}".lower()
+            if not keyword or keyword in haystack:
+                filtered.append(row)
+        self.filtered_rows = list(filtered)
+
+        self.tb.setRowCount(0)
+        for row_data in filtered:
+            row = self.tb.rowCount()
+            self.tb.insertRow(row)
+            self.tb.setItem(row, 0, QTableWidgetItem(row_data["left"]))
+            self.tb.setItem(row, 1, QTableWidgetItem(row_data["right_text"]))
+            count_item = QTableWidgetItem(str(row_data["count"]))
+            count_item.setTextAlignment(Qt.AlignCenter)
+            self.tb.setItem(row, 2, count_item)
+
+        self.stats_label.setText(
+            f"绑定域名: {self.binding_domain_count} | 独立 IP: {self.binding_ip_count} | 绑定边数: {self.binding_edge_count} | "
+            f"当前视图: {left_name} | 过滤后行数: {len(filtered)} | 多绑: {'开' if multi_only else '关'} | "
+            f"空绑定: {'开' if empty_only else '关'} | 高密度: {'开' if dense_only else '关'}"
+        )
+
+    def export_filtered_rows(self):
+        if not self.filtered_rows:
+            QMessageBox.information(self, "提示", "当前没有可导出的过滤结果。")
+            return
+
+        is_reverse = self.view_mode.currentIndex() == 1
+        left_header = "IP" if is_reverse else "域名"
+        right_header = "绑定域名" if is_reverse else "绑定 IP"
+        default_name = "bindings_ip_to_domain.csv" if is_reverse else "bindings_domain_to_ip.csv"
+        default_path = os.path.join(self.proj_dir or os.getcwd(), default_name)
+
+        path, selected_filter = QFileDialog.getSaveFileName(
+            self,
+            "导出当前过滤结果",
+            default_path,
+            "CSV Files (*.csv);;Text Files (*.txt)",
+        )
+        if not path:
+            return
+
+        try:
+            if path.lower().endswith(".txt") or "Text Files" in selected_filter:
+                with open(path, "w", encoding="utf-8") as handle:
+                    handle.write(f"{left_header}\t{right_header}\t数量\n")
+                    for row in self.filtered_rows:
+                        handle.write(f"{row['left']}\t{row['right_text']}\t{row['count']}\n")
+            else:
+                with open(path, "w", newline="", encoding="utf-8-sig") as handle:
+                    writer = csv.writer(handle)
+                    writer.writerow([left_header, right_header, "数量"])
+                    for row in self.filtered_rows:
+                        writer.writerow([row["left"], row["right_text"], row["count"]])
+            QMessageBox.information(self, "成功", f"已导出 {len(self.filtered_rows)} 条记录到:\n{path}")
+        except Exception as exc:
+            QMessageBox.warning(self, "错误", f"导出失败: {exc}")
 
 
 
@@ -396,18 +609,7 @@ class RealIPHunterDialog(QDialog):
         if not extracted: return QMessageBox.warning(self, "提示", "没有符合条件的有效 IP 可提取。")
         
         if self.proj_dir and bindings_to_save:
-            p = os.path.join(self.proj_dir, "domain_to_ip.json")
-            cache = {}
-            if os.path.exists(p):
-                try: cache = json.load(open(p, 'r', encoding='utf-8'))
-                except: pass
-            
-            for d, ips in bindings_to_save.items():
-                if d not in cache: cache[d] = []
-                for i in ips:
-                    if i not in cache[d]: cache[d].append(i)
-            try: json.dump(cache, open(p, 'w', encoding='utf-8'), indent=4)
-            except: pass
+            append_domain_bindings(self.proj_dir, bindings_to_save)
 
         current_text = self.ip_pool_widget.toPlainText()
         existing_lines = [line.strip() for line in current_text.split('\n') if line.strip()]
@@ -758,18 +960,7 @@ class ReverseIPDialog(QDialog):
         if not extracted: return QMessageBox.warning(self, "提示", "没有有效的新域名可供提取。")
 
         if self.proj_dir and bindings_to_save:
-            p = os.path.join(self.proj_dir, "domain_to_ip.json")
-            cache = {}
-            if os.path.exists(p):
-                try: cache = json.load(open(p, 'r', encoding='utf-8'))
-                except: pass
-            
-            for d, ips in bindings_to_save.items():
-                if d not in cache: cache[d] = []
-                for i in ips:
-                    if i not in cache[d]: cache[d].append(i)
-            try: json.dump(cache, open(p, 'w', encoding='utf-8'), indent=4)
-            except: pass
+            append_domain_bindings(self.proj_dir, bindings_to_save)
 
         current_text = self.dom_pool_widget.toPlainText()
         existing_lines = [line.strip() for line in current_text.split('\n') if line.strip()]

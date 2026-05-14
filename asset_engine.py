@@ -10,11 +10,15 @@ from datetime import datetime
 
 import aiohttp
 from PySide6.QtCore import QThread, Signal
+from asset_bindings import load_dns_cache, save_dns_cache
 
 from asset_common import (
     FAIL_SAMPLE_FILE,
     HTTP_STATUS,
+    collect_unique_ips,
     extract_title,
+    normalize_host_value,
+    normalize_ip_value,
     task_fingerprint,
     write_global_log,
 )
@@ -201,33 +205,22 @@ class CollTask(QThread):
     def _load_dns_cache(self):
         if not self.proj_dir:
             return
-
-        path = os.path.join(self.proj_dir, "domain_to_ip.json")
-        if not os.path.exists(path):
-            return
-
         try:
-            raw_cache = json.load(open(path, "r", encoding="utf-8"))
             self.dns_cache = OrderedDict()
+            raw_cache = load_dns_cache(self.proj_dir)
             for key, value in raw_cache.items():
-                clean_key = key.split(":")[0]
-                if clean_key not in self.dns_cache or not self.dns_cache[clean_key]:
-                    self._set_dns_cache(clean_key, value)
+                clean_key = normalize_host_value(key).split(":")[0]
+                clean_ips = collect_unique_ips(value)
+                if clean_key and (clean_key not in self.dns_cache or not self.dns_cache[clean_key]):
+                    self._set_dns_cache(clean_key, clean_ips)
         except Exception:
             pass
 
     def _save_dns_cache(self):
         if not self.proj_dir:
             return
-
-        path = os.path.join(self.proj_dir, "domain_to_ip.json")
         try:
-            json.dump(
-                self.dns_cache,
-                open(path, "w", encoding="utf-8"),
-                indent=4,
-                ensure_ascii=False,
-            )
+            save_dns_cache(self.proj_dir, self.dns_cache)
         except Exception:
             pass
 
@@ -577,8 +570,11 @@ class CollTask(QThread):
                         if self._stop_flag:
                             break
 
-                        pure_ip = raw_ip.split(":")[0]
-                        port = raw_ip.split(":")[1] if ":" in raw_ip else None
+                        pure_ip = normalize_ip_value(raw_ip)
+                        if not pure_ip:
+                            continue
+                        _, _, port = str(raw_ip).partition(":")
+                        port = port if port.isdigit() else None
                         url_variants = set()
                         if self.policies.get("k", True) and port:
                             url_variants.update([f"http://{raw_ip}", f"https://{raw_ip}"])
