@@ -1,5 +1,6 @@
 ﻿import sys, os, re, asyncio, subprocess, json, socket, ipaddress, csv
 import hashlib
+import time
 from datetime import datetime
 from PySide6.QtCore import Qt, Slot, QTimer
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
@@ -146,6 +147,8 @@ class AssetCommander(QMainWindow):
         self.scanned_count = 0
         self._pending_scanned_keys = set()
         self.scan_signature = ""
+        self.scan_started_at = 0.0
+        self.scan_resume_base = 0
         self.ui_conf_counts = {"极危": 0, "高危": 0, "中危": 0, "低危": 0}
         self._risk_cap_notified = set()
         self.csv_timer = QTimer(self)
@@ -188,6 +191,38 @@ class AssetCommander(QMainWindow):
             header_item = self.tb.horizontalHeaderItem(column)
             if header_item is not None:
                 header_item.setToolTip(tip)
+
+    def _format_eta(self, seconds):
+        seconds = max(int(seconds), 0)
+        mins, secs = divmod(seconds, 60)
+        hours, mins = divmod(mins, 60)
+        if hours > 0:
+            return f"{hours}h {mins}m {secs}s"
+        if mins > 0:
+            return f"{mins}m {secs}s"
+        return f"{secs}s"
+
+    def _refresh_main_progress_display(self, current, total, stopped=False):
+        current = max(0, int(current))
+        total = max(1, int(total))
+        elapsed = max(time.time() - self.scan_started_at, 0.0) if self.scan_started_at else 0.0
+
+        eta_text = "ETA: 计算中"
+        if current > self.scan_resume_base and elapsed > 0:
+            delta_done = current - self.scan_resume_base
+            remaining = max(total - current, 0)
+            eta_seconds = int((elapsed / max(delta_done, 1)) * remaining)
+            eta_text = f"ETA: {self._format_eta(eta_seconds)}"
+        elif current >= total:
+            eta_text = "ETA: 0s"
+
+        percent = int((current / total) * 100) if total else 0
+        status = "已停止" if stopped else ("已完成" if current >= total else "对撞进度")
+        self.pg_bar.setFormat(f"{status} {current} / {total} [{percent}%] {eta_text}")
+        if hasattr(self, "lbl_scan_eta"):
+            self.lbl_scan_eta.setText(
+                f"进度: {current} / {total} | 已耗时: {self._format_eta(elapsed)} | {eta_text}"
+            )
 
     def _apply_result_item_style(self, item, field, conf):
         base_bg = None
@@ -493,6 +528,10 @@ class AssetCommander(QMainWindow):
         """)
         ml.addWidget(self.pg_bar)
 
+        self.lbl_scan_eta = QLabel("进度: 0 / 1 | 已耗时: 0s | ETA: 计算中")
+        self.lbl_scan_eta.setStyleSheet("color: #8b949e;")
+        ml.addWidget(self.lbl_scan_eta)
+
         self.lv = QTextEdit()
         self.lv.setReadOnly(True)
         self.lv.setFixedHeight(150)
@@ -637,6 +676,7 @@ class AssetCommander(QMainWindow):
         if hasattr(self, 'cth') and self.cth.isRunning():
             self.log("INFO", "正在发送强制截断指令...")
             self.btn_stop.setEnabled(False); self.btn_stop.setText("截断中...")
+            self.pg_bar.setFormat(f"正在停止 {self.pg_bar.value()} / {self.pg_bar.maximum()} [请等待]")
             self.cth.stop() 
 
     def force_save(self):
@@ -958,6 +998,9 @@ class AssetCommander(QMainWindow):
         self.tb.setRowCount(0)
         self.pg_bar.setMaximum(1)
         self.pg_bar.setValue(0)
+        self.scan_started_at = 0.0
+        self.scan_resume_base = 0
+        self._refresh_main_progress_display(0, 1)
         self.lbl_p.setText("当前工程: [未载入]")
         self.lbl_p.setToolTip("")
         self.last_scan_stats = {}
@@ -1108,6 +1151,9 @@ class AssetCommander(QMainWindow):
                 self.log("INFO", "检测到当前工程配置已变化，旧断点进度不再复用，本轮将从 0 开始。")
         self.pg_bar.setMaximum(total_progress)
         self.pg_bar.setValue(current_progress)
+        self.scan_started_at = 0.0
+        self.scan_resume_base = current_progress
+        self._refresh_main_progress_display(current_progress, total_progress)
 
         if current_progress:
             self.log("INFO", f"已恢复扫描进度: {current_progress} / {total_progress}")
@@ -1133,6 +1179,7 @@ class AssetCommander(QMainWindow):
         if self.pg_bar.maximum() != total:
             self.pg_bar.setMaximum(total)
         self.pg_bar.setValue(current)
+        self._refresh_main_progress_display(current, total)
 
         if current % 100 == 0 or len(self.scanned_buffer) >= 2000:
             self._write_progress_state(
@@ -1206,6 +1253,9 @@ class AssetCommander(QMainWindow):
         total_hint = max(int(progress_state.get("total", 0) or 0), current_progress, 1)
         self.pg_bar.setMaximum(total_hint)
         self.pg_bar.setValue(current_progress)
+        self.scan_started_at = time.time()
+        self.scan_resume_base = current_progress
+        self._refresh_main_progress_display(current_progress, total_hint)
 
         if current_progress:
             self.log("INFO", f"从断点继续扫描，已扫描 {current_progress} 条任务。")
@@ -1249,6 +1299,7 @@ class AssetCommander(QMainWindow):
         self.btn_stop.setText("停止")
         self._set_scan_config_enabled(True)
         self.apply_table_sort()
+        self._refresh_main_progress_display(current_progress, total_progress, stopped=was_stopped)
 
         title = "扫描已中止" if was_stopped else "扫描完成"
         msg = (
@@ -1275,6 +1326,7 @@ class AssetCommander(QMainWindow):
         if self.pg_bar.maximum() != total:
             self.pg_bar.setMaximum(total)
         self.pg_bar.setValue(current)
+        self._refresh_main_progress_display(current, total)
         self._write_progress_state(
             current=current,
             total=total,

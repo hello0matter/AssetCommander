@@ -3,6 +3,7 @@ import json
 import os
 import ipaddress
 import re
+import time
 
 from asset_bindings import append_domain_bindings, load_domain_bindings
 from PySide6.QtCore import Qt, Slot
@@ -18,6 +19,7 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QLineEdit,
     QMessageBox,
+    QProgressBar,
     QSpinBox,
     QPushButton,
     QSplitter,
@@ -630,6 +632,8 @@ class IPFissionDialog(QDialog):
         self.resize(1100, 650)
         self.ip_pool_widget = ip_pool_widget
         self.proj_dir = proj_dir
+        self.scan_started_at = 0.0
+        self.scan_total_tasks = 0
         self.setStyleSheet("""
             QDialog { background-color: #0d1117; color: #c9d1d9; font-family: 'Microsoft YaHei'; }
             QTableWidget { background-color: #161b22; border: 1px solid #30363d; }
@@ -688,6 +692,22 @@ class IPFissionDialog(QDialog):
         run_layout.addWidget(self.btn_run, stretch=3)
         run_layout.addWidget(self.btn_stop, stretch=1)
         ll.addLayout(run_layout)
+
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setTextVisible(True)
+        self.progress_bar.setFormat("待开始")
+        self.progress_bar.setMinimum(0)
+        self.progress_bar.setMaximum(1)
+        self.progress_bar.setValue(0)
+        self.progress_bar.setStyleSheet("""
+            QProgressBar { border: 1px solid #30363d; background-color: #161b22; color: #c9d1d9; border-radius: 4px; text-align: center; font-weight: bold; }
+            QProgressBar::chunk { background-color: #1f6feb; border-radius: 3px; }
+        """)
+        ll.addWidget(self.progress_bar)
+
+        self.lbl_progress = QLabel("进度: 0 / 0")
+        self.lbl_progress.setStyleSheet("color: #8b949e;")
+        ll.addWidget(self.lbl_progress)
         
         sp.addWidget(left_w)
         
@@ -749,6 +769,7 @@ class IPFissionDialog(QDialog):
         if hasattr(self, 'work_thread') and self.work_thread.isRunning():
             self.work_thread._stop = True
             self.btn_stop.setEnabled(False); self.btn_stop.setText("正在强杀请求...")
+            self.progress_bar.setFormat("正在停止...")
 
     def expand_c_class(self):
         text = self.input_ips.toPlainText()
@@ -780,11 +801,19 @@ class IPFissionDialog(QDialog):
         self.tb.setSortingEnabled(False); self.tb.setRowCount(0)
         self.btn_run.setEnabled(False); self.btn_run.setText(f"正在测绘 {len(target_ips)} 个独立 IP...")
         self.btn_stop.setEnabled(True); self.btn_stop.setText("停止")
+        self.scan_started_at = time.time()
+        self.scan_total_tasks = 0
+        self.progress_bar.setMinimum(0)
+        self.progress_bar.setMaximum(1)
+        self.progress_bar.setValue(0)
+        self.progress_bar.setFormat("正在初始化任务...")
+        self.lbl_progress.setText(f"进度: 0 / 0 | 独立 IP: {len(target_ips)}")
         
         local_concurrency = self.spin_threads.value()
 
         self.work_thread = FissionTask(list(target_ips), self.input_kws.text(), self.input_ports.text(), local_concurrency)
         self.work_thread.res_sig.connect(self.add_row)
+        self.work_thread.progress_sig.connect(self.update_progress)
         self.work_thread.fin_sig.connect(self.on_finish)
         self.work_thread.start()
 
@@ -800,7 +829,44 @@ class IPFissionDialog(QDialog):
         self.tb.setSortingEnabled(True)
         self.btn_run.setEnabled(True); self.btn_run.setText("启动并发测绘")
         self.btn_stop.setEnabled(False); self.btn_stop.setText("停止")
-        QMessageBox.information(self, "完成", "C 段指纹测绘已完成，无效资产已静默丢弃。")
+        final_total = max(self.progress_bar.maximum(), self.scan_total_tasks, 1)
+        final_value = min(self.progress_bar.value(), final_total)
+        self.progress_bar.setMaximum(final_total)
+        self.progress_bar.setValue(final_value)
+        was_stopped = bool(hasattr(self, "work_thread") and getattr(self.work_thread, "_stop", False))
+        if was_stopped:
+            self.progress_bar.setFormat(f"已停止 {final_value}/{final_total}")
+            QMessageBox.information(self, "已停止", "C 段指纹测绘已停止，当前进度已保留在界面。")
+        else:
+            self.progress_bar.setFormat(f"已完成 {final_value}/{final_total}")
+            QMessageBox.information(self, "完成", "C 段指纹测绘已完成，无效资产已静默丢弃。")
+
+    @Slot(int, int)
+    def update_progress(self, current, total):
+        current = max(0, int(current))
+        total = max(1, int(total))
+        self.scan_total_tasks = total
+        if self.progress_bar.maximum() != total:
+            self.progress_bar.setMaximum(total)
+        self.progress_bar.setValue(min(current, total))
+
+        elapsed = max(time.time() - self.scan_started_at, 0.001) if self.scan_started_at else 0.0
+        eta_text = "ETA: 计算中"
+        if current > 0 and elapsed > 0:
+            remaining = max(total - current, 0)
+            eta_seconds = int((elapsed / current) * remaining)
+            mins, secs = divmod(eta_seconds, 60)
+            hours, mins = divmod(mins, 60)
+            if hours > 0:
+                eta_text = f"ETA: {hours}h {mins}m {secs}s"
+            elif mins > 0:
+                eta_text = f"ETA: {mins}m {secs}s"
+            else:
+                eta_text = f"ETA: {secs}s"
+
+        percent = int((current / total) * 100) if total else 0
+        self.progress_bar.setFormat(f"{current}/{total} [{percent}%] {eta_text}")
+        self.lbl_progress.setText(f"进度: {current} / {total} | 已耗时: {int(elapsed)}s | {eta_text}")
 
     def extract_to_main(self):
         if not self.ip_pool_widget: return

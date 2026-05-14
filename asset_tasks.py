@@ -130,6 +130,7 @@ class DnsResolverTask(QThread):
 
 class FissionTask(QThread):
     res_sig = Signal(str, str, str, str)
+    progress_sig = Signal(int, int)
     fin_sig = Signal()
 
     def __init__(self, ips, keywords, ports_str, concurrency=300):
@@ -173,8 +174,11 @@ class FissionTask(QThread):
     def run(self):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
+        total_tasks = 0
+        completed_tasks = 0
 
         async def run_all():
+            nonlocal total_tasks, completed_tasks
             connector = aiohttp.TCPConnector(
                 limit=self.concurrency,
                 ssl=False,
@@ -195,23 +199,29 @@ class FissionTask(QThread):
                                     self.fetch_title(session, f"https://{ip}:{port}", sem)
                                 )
                             )
+                            total_tasks += 1
                         elif port in ["80", "8080", "8888", "81", "7001"]:
                             tasks.append(
                                 asyncio.create_task(
                                     self.fetch_title(session, f"http://{ip}:{port}", sem)
                                 )
                             )
+                            total_tasks += 1
                         else:
                             tasks.append(
                                 asyncio.create_task(
                                     self.fetch_title(session, f"http://{ip}:{port}", sem)
                                 )
                             )
+                            total_tasks += 1
                             tasks.append(
                                 asyncio.create_task(
                                     self.fetch_title(session, f"https://{ip}:{port}", sem)
                                 )
                             )
+                            total_tasks += 1
+
+                self.progress_sig.emit(0, max(total_tasks, 1))
 
                 while tasks:
                     if self._stop:
@@ -219,7 +229,14 @@ class FissionTask(QThread):
                             task.cancel()
                         await asyncio.gather(*tasks, return_exceptions=True)
                         break
-                    _, pending = await asyncio.wait(tasks, timeout=0.5)
+                    done, pending = await asyncio.wait(
+                        tasks,
+                        timeout=0.5,
+                        return_when=asyncio.FIRST_COMPLETED,
+                    )
+                    if done:
+                        completed_tasks += len(done)
+                        self.progress_sig.emit(completed_tasks, max(total_tasks, 1))
                     tasks = list(pending)
 
         try:
